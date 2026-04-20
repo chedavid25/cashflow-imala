@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { clientService, Client } from "@/lib/services/client-service";
+import { accountService, Account } from "@/lib/services/account-service";
 import { useAuth } from "@/context/AuthContext";
-import { User, Briefcase, FileText, Globe, DollarSign } from "lucide-react";
+import { User, Briefcase, FileText, Globe, DollarSign, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EditClientModalProps {
@@ -26,6 +27,14 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   const [billingType, setBillingType] = useState<'monthly_fee' | 'one_shot'>('monthly_fee');
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [budget, setBudget] = useState("");
+  const [defaultTargetAccount, setDefaultTargetAccount] = useState("");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+
+  useEffect(() => {
+    if (user && isOpen) {
+      accountService.getAccounts(user.uid).then(setAccounts);
+    }
+  }, [user, isOpen]);
 
   useEffect(() => {
     if (client && isOpen) {
@@ -35,6 +44,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       setBillingType(client.billingType);
       setCurrency(client.currency);
       setBudget(String(client.budget));
+      setDefaultTargetAccount(client.defaultTargetAccount || "");
     }
   }, [client, isOpen]);
 
@@ -51,6 +61,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
         billingType,
         currency,
         budget: Number(budget) || 0,
+        defaultTargetAccount: defaultTargetAccount || ""
       });
       
       onSuccess();
@@ -66,6 +77,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Cliente">
       <form onSubmit={handleSubmit} className="space-y-6 pb-4">
         <div className="space-y-4">
+          {/* Nombre Comercial */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-white/40 uppercase ml-1">Nombre Comercial</label>
             <div className="relative">
@@ -81,6 +93,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
             </div>
           </div>
 
+          {/* Razón Social y CUIT */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/40 uppercase ml-1">Razón Social</label>
@@ -110,6 +123,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
             </div>
           </div>
 
+          {/* Tipo de Facturación */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-white/40 uppercase ml-1">Tipo de Facturación</label>
             <div className="grid grid-cols-2 gap-3">
@@ -140,6 +154,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
             </div>
           </div>
 
+          {/* Moneda y Presupuesto */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/40 uppercase ml-1">Moneda</label>
@@ -180,8 +195,27 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
               </div>
             </div>
           </div>
+
+          {/* Cuenta Predeterminada */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase ml-1">Cuenta de Cobro Predeterminada</label>
+            <div className="relative">
+              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+              <select
+                value={defaultTargetAccount}
+                onChange={(e) => setDefaultTargetAccount(e.target.value)}
+                className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all appearance-none text-white/80"
+              >
+                <option value="">Seleccionar cuenta...</option>
+                {accounts.map(acc => (
+                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
+        {/* Botones de acción */}
         <div className="flex flex-col space-y-3">
           <Button 
             type="submit"

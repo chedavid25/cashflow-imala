@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { clientService, Client } from "@/lib/services/client-service";
+import { accountService, Account } from "@/lib/services/account-service";
 import { useAuth } from "@/context/AuthContext";
-import { User, Briefcase, FileText, Globe, DollarSign } from "lucide-react";
+import { User, Briefcase, FileText, Globe, DollarSign, Wallet, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 interface CreateClientModalProps {
   isOpen: boolean;
@@ -25,6 +27,14 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
   const [billingType, setBillingType] = useState<'monthly_fee' | 'one_shot'>('monthly_fee');
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [budget, setBudget] = useState("");
+  const [defaultTargetAccount, setDefaultTargetAccount] = useState("");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+
+  useEffect(() => {
+    if (user && isOpen) {
+      accountService.getAccounts(user.uid).then(setAccounts);
+    }
+  }, [user, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +50,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
         billingType,
         currency,
         budget: Number(budget) || 0,
-        billTo: 'David', // Defaulting to David
+        billTo: 'David', 
+        defaultTargetAccount: defaultTargetAccount || ""
       });
       
       // Reset form
@@ -175,6 +186,24 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                 />
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase ml-1">Cuenta de Cobro Predeterminada</label>
+            <div className="relative">
+              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+              <select
+                value={defaultTargetAccount}
+                onChange={(e) => setDefaultTargetAccount(e.target.value)}
+                className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all appearance-none text-white/80"
+              >
+                <option value="">Seleccionar cuenta...</option>
+                {accounts.map(acc => (
+                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
+                ))}
+              </select>
+            </div>
+            <p className="text-[10px] text-white/20 ml-1">Esta cuenta se usará por defecto al facturar abonos.</p>
           </div>
         </div>
 

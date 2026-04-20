@@ -22,6 +22,7 @@ export interface Transaction {
   amount: number;
   currency: 'ARS' | 'USD';
   exchangeRate?: number;
+  exchangeDate?: Timestamp;
   status: 'pending' | 'completed';
   date: Timestamp;
   isRecurring: boolean;
@@ -61,6 +62,7 @@ export const transactionService = {
       amount: number, 
       currency: 'ARS' | 'USD', 
       exchangeRate?: number, 
+      exchangeDate?: Timestamp,
       accountId: string 
     }
   ): Promise<void> {
@@ -90,8 +92,9 @@ export const transactionService = {
         amount: finalData.amount,
         currency: finalData.currency,
         exchangeRate: finalData.exchangeRate || 1,
+        exchangeDate: finalData.exchangeDate || Timestamp.now(),
         accountId: finalData.accountId,
-        date: Timestamp.now() // Set date to confirmation date
+        date: Timestamp.now() 
       });
     });
   }
