@@ -1,0 +1,191 @@
+"use client";
+
+import React, { useState } from "react";
+import { Modal } from "../ui/modal";
+import { Button } from "../ui/button";
+import { clientService, Client } from "@/lib/services/client-service";
+import { useAuth } from "@/context/AuthContext";
+import { User, Briefcase, FileText, Globe, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface CreateClientModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientModalProps) {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  
+  // Form state
+  const [name, setName] = useState("");
+  const [razonSocial, setRazonSocial] = useState("");
+  const [cuit, setCuit] = useState("");
+  const [billingType, setBillingType] = useState<'monthly_fee' | 'one_shot'>('monthly_fee');
+  const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
+  const [budget, setBudget] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !name) return;
+
+    setLoading(true);
+    try {
+      await clientService.createClient({
+        userId: user.uid,
+        name,
+        razonSocial,
+        cuit,
+        billingType,
+        currency,
+        budget: Number(budget) || 0,
+        billTo: 'David', // Defaulting to David
+      });
+      
+      // Reset form
+      setName("");
+      setRazonSocial("");
+      setCuit("");
+      setBudget("");
+      
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Error creating client:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Nuevo Cliente">
+      <form onSubmit={handleSubmit} className="space-y-6 pb-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase ml-1">Nombre Comercial</label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+              <input 
+                required
+                type="text"
+                placeholder="Nombre del cliente o empresa"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase ml-1">Razón Social</label>
+              <div className="relative">
+                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                <input 
+                  type="text"
+                  placeholder="Sociedad / Titular"
+                  value={razonSocial}
+                  onChange={(e) => setRazonSocial(e.target.value)}
+                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase ml-1">CUIT</label>
+              <div className="relative">
+                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                <input 
+                  type="text"
+                  placeholder="20-XXXXXXXX-X"
+                  value={cuit}
+                  onChange={(e) => setCuit(e.target.value)}
+                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase ml-1">Tipo de Facturación</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setBillingType('monthly_fee')}
+                className={cn(
+                  "h-14 rounded-2xl border text-sm font-bold transition-all",
+                  billingType === 'monthly_fee' 
+                    ? "bg-primary/10 border-primary text-white" 
+                    : "bg-[#1a1a1a] border-white/5 text-white/40"
+                )}
+              >
+                Abono Mensual
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingType('one_shot')}
+                className={cn(
+                  "h-14 rounded-2xl border text-sm font-bold transition-all",
+                  billingType === 'one_shot' 
+                    ? "bg-primary/10 border-primary text-white" 
+                    : "bg-[#1a1a1a] border-white/5 text-white/40"
+                )}
+              >
+                Proyecto Único
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase ml-1">Moneda</label>
+              <div className="flex bg-[#1a1a1a] rounded-2xl p-1 border border-white/5 h-14 items-center">
+                <button
+                  type="button"
+                  onClick={() => setCurrency('ARS')}
+                  className={cn(
+                    "flex-1 h-full rounded-xl text-xs font-black transition-all",
+                    currency === 'ARS' ? "bg-[#333333] text-white" : "text-white/20"
+                  )}
+                >
+                  ARS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency('USD')}
+                  className={cn(
+                    "flex-1 h-full rounded-xl text-xs font-black transition-all",
+                    currency === 'USD' ? "bg-[#333333] text-white" : "text-white/20"
+                  )}
+                >
+                  USD
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase ml-1">Presupuesto / Fee</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 font-bold">$</span>
+                <input 
+                  type="number"
+                  placeholder="0.00"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-8 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Button 
+          type="submit"
+          disabled={loading || !name}
+          className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
+        >
+          {loading ? "Registrando..." : "Crear Cliente"}
+        </Button>
+      </form>
+    </Modal>
+  );
+}
