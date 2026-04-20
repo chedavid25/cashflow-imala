@@ -84,11 +84,11 @@ export default function ClientDetailPage() {
     return (
       <MainLayout>
         <div className="space-y-8 animate-pulse">
-          <div className="h-10 w-48 bg-white/5 rounded-2xl" />
+          <div className="h-10 w-48 bg-muted rounded-2xl" />
           <div className="grid gap-6 md:grid-cols-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white/5 rounded-3xl" />)}
+            {[1, 2, 3].map(i => <div key={i} className="h-32 bg-muted rounded-3xl" />)}
           </div>
-          <div className="h-64 bg-white/5 rounded-3xl" />
+          <div className="h-64 bg-muted rounded-3xl" />
         </div>
       </MainLayout>
     );
@@ -99,7 +99,7 @@ export default function ClientDetailPage() {
       <div className="space-y-8">
         <button 
           onClick={() => router.back()}
-          className="flex items-center text-sm font-bold text-white/40 hover:text-white transition-colors group"
+          className="flex items-center text-sm font-bold text-muted-foreground hover:text-foreground transition-colors group"
         >
           <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Volver a Clientes
@@ -117,7 +117,7 @@ export default function ClientDetailPage() {
               </p>
             </div>
           </div>
-          <div className="flex bg-[#1a1a1a] rounded-2xl p-1.5 border border-white/5">
+          <div className="flex bg-muted rounded-2xl p-1.5 border border-border">
              <div className="px-4 py-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 rounded-xl">
                {client?.billingType === 'monthly_fee' ? 'Abono Mensual' : 'Proyecto Único'}
              </div>
@@ -125,9 +125,9 @@ export default function ClientDetailPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="border-none bg-card/40 backdrop-blur-md shadow-md">
+          <Card className="border border-border bg-card shadow-md">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Total Cobrado</CardTitle>
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Total Cobrado</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black text-emerald-500">
@@ -135,9 +135,9 @@ export default function ClientDetailPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-card/40 backdrop-blur-md shadow-md">
+          <Card className="border border-border bg-card shadow-md">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Pendiente de Cobro</CardTitle>
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Pendiente de Cobro</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black text-amber-500">
@@ -145,21 +145,21 @@ export default function ClientDetailPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-card/40 backdrop-blur-md shadow-md">
+          <Card className="border border-border bg-card shadow-md">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Billing Fee</CardTitle>
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Billing Fee</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black">
+              <div className="text-2xl font-black text-foreground">
                 {formatCurrency(client?.budget || 0, client?.currency || 'ARS')}
-                <span className="text-xs text-white/20 ml-2 font-bold">/ mes</span>
+                <span className="text-xs text-muted-foreground ml-2 font-bold">/ mes</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-none bg-card/20 backdrop-blur-sm shadow-xl rounded-3xl overflow-hidden">
-          <CardHeader className="border-b border-white/5 px-8 py-6">
+        <Card className="border-none bg-card shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="border-b border-border px-8 py-6">
             <CardTitle className="text-lg font-bold flex items-center">
               <FileText className="mr-3 h-5 w-5 text-primary" />
               Historial de Facturación y Pagos
@@ -170,24 +170,24 @@ export default function ClientDetailPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="px-8 py-4 text-[10px] font-black text-white/20 uppercase tracking-widest">Fecha</th>
-                      <th className="px-8 py-4 text-[10px] font-black text-white/20 uppercase tracking-widest">Concepto</th>
-                      <th className="px-8 py-4 text-[10px] font-black text-white/20 uppercase tracking-widest">Estado</th>
-                      <th className="px-8 py-4 text-[10px] font-black text-white/20 uppercase tracking-widest text-right">Monto</th>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fecha</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Concepto</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest text-right">Monto</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-border">
                     {transactions.map((t) => (
-                      <tr key={t.id} className="hover:bg-white/[0.02] transition-colors group">
+                      <tr key={t.id} className="hover:bg-muted/50 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
-                            <span className="text-sm font-bold text-white/80">{t.date.toDate().toLocaleDateString()}</span>
-                            <span className="text-[10px] text-white/20 font-medium">{t.date.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className="text-sm font-bold text-foreground/90">{t.date.toDate().toLocaleDateString()}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{t.date.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <span className="text-sm font-bold text-white/60">{t.category}</span>
+                          <span className="text-sm font-bold text-foreground/70">{t.category}</span>
                         </td>
                         <td className="px-8 py-5">
                           {t.status === 'completed' ? (
@@ -217,10 +217,10 @@ export default function ClientDetailPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                <div className="h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-white/10" />
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                  <AlertCircle className="h-8 w-8 text-muted-foreground/30" />
                 </div>
-                <p className="text-white/40 font-bold text-sm">No hay registros de facturación para este cliente.</p>
+                <p className="text-muted-foreground font-bold text-sm">No hay registros de facturación para este cliente.</p>
               </div>
             )}
           </CardContent>

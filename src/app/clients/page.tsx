@@ -107,13 +107,13 @@ export default function ClientsPage() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input 
             type="text" 
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 focus:outline-none border border-white/5 focus:border-primary/50 text-sm transition-all shadow-inner"
+            className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 focus:outline-none border border-border focus:border-primary/50 text-sm transition-all shadow-inner"
           />
         </div>
 
@@ -143,10 +143,10 @@ export default function ClientsPage() {
                           <Users className="h-7 w-7" />
                         </div>
                         <div>
-                          <h3 className="font-black text-lg tracking-tight">{client.name}</h3>
+                          <h3 className="font-black text-lg tracking-tight truncate max-w-[150px] sm:max-w-none">{client.name}</h3>
                           <div className="flex flex-col space-y-1 mt-1">
                             {client.email && (
-                              <div className="flex items-center text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                              <div className="flex items-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                 <Mail className="mr-2 h-3 w-3" />
                                 {client.email}
                               </div>
@@ -160,15 +160,15 @@ export default function ClientsPage() {
                       </div>
                       <DropdownMenu 
                         trigger={
-                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 transition-opacity">
-                            <MoreVertical className="h-5 w-5 text-white/40" />
+                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted transition-opacity">
+                            <MoreVertical className="h-5 w-5 text-muted-foreground" />
                           </Button>
                         }
                       >
                         <DropdownItem onClick={() => handleEdit(client)}>
                           <Edit className="mr-2 h-4 w-4" /> Editar Datos
                         </DropdownItem>
-                        <div className="h-px bg-white/5 my-1" />
+                        <div className="h-px bg-border my-1" />
                         <DropdownItem 
                           variant="danger" 
                           onClick={() => {

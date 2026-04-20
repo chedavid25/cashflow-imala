@@ -138,7 +138,7 @@ export default function AccountsPage() {
                         </h3>
                       </div>
                       
-                      <div className="flex items-center space-x-4 pt-2 border-t border-white/5">
+                      <div className="flex items-center space-x-4 pt-2 border-t border-border">
                         <div className="flex items-center text-[10px] font-bold text-emerald-500">
                           <TrendingUp className="mr-1 h-3 w-3" />
                           +12% este mes
@@ -154,7 +154,7 @@ export default function AccountsPage() {
             })}
           </motion.div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-accent/20 rounded-3xl border-2 border-dashed border-white/5">
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-accent/20 rounded-3xl border-2 border-dashed border-border">
             <div className="h-24 w-24 rounded-full bg-accent flex items-center justify-center">
               <Landmark className="h-12 w-12 text-muted-foreground/30" />
             </div>
@@ -167,7 +167,7 @@ export default function AccountsPage() {
             <Button 
               variant="outline" 
               onClick={() => setIsModalOpen(true)}
-              className="rounded-2xl px-10 h-14 font-bold border-white/10 hover:bg-white/5 transition-all"
+              className="rounded-2xl px-10 h-14 font-bold border-border hover:bg-muted transition-all"
             >
               Registrar mi primera cuenta
             </Button>

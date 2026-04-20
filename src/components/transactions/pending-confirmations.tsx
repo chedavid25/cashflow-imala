@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Transaction, transactionService } from "@/lib/services/transaction-service";
+import { clientService, Client } from "@/lib/services/client-service";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,24 +14,34 @@ import { es } from "date-fns/locale";
 export function PendingConfirmations() {
   const { user } = useAuth();
   const [pending, setPending] = useState<Transaction[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchPending = async () => {
+  const fetchData = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const all = await transactionService.getTransactions(user.uid);
-      setPending(all.filter(t => t.status === "pending"));
+      const [allTransactions, allClients] = await Promise.all([
+        transactionService.getTransactions(user.uid),
+        clientService.getClients(user.uid)
+      ]);
+      setPending(allTransactions.filter(t => t.status === "pending"));
+      setClients(allClients);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPending();
+    fetchData();
   }, [user]);
 
-  if (loading) return <div>Cargando pendientes...</div>;
+  const getClientName = (clientId?: string) => {
+    if (!clientId) return null;
+    return clients.find(c => c.id === clientId)?.name;
+  };
+
+  if (loading) return <div className="p-8 text-center text-xs font-black uppercase tracking-widest opacity-50">Cargando pendientes...</div>;
   if (pending.length === 0) return null;
 
   return (
@@ -47,35 +58,41 @@ export function PendingConfirmations() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {pending.map((t) => (
-          <div 
-            key={t.id} 
-            className="flex items-center justify-between p-4 rounded-2xl bg-accent/30 border border-accent/50 transition-all hover:bg-accent/50"
-          >
-            <div className="flex items-center space-x-4">
-              <div className={t.type === 'income' ? "text-emerald-500" : "text-rose-500"}>
-                {t.type === 'income' ? <CheckCircle2 className="h-6 w-6" /> : <AlertCircle className="h-6 w-6" />}
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{t.category}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {format(t.date.toDate(), "d 'de' MMMM", { locale: es })}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="text-right">
-                <p className="font-bold text-sm">
-                  {t.currency} {t.amount.toLocaleString()}
-                </p>
-                <p className="text-[10px] text-muted-foreground uppercase">{t.type === 'income' ? 'Ingreso' : 'Egreso'}</p>
+        {pending.map((t) => {
+          const clientName = getClientName(t.clientId);
+          return (
+            <div 
+              key={t.id} 
+              className="flex items-center justify-between p-4 rounded-2xl bg-muted border border-border transition-all hover:bg-accent"
+            >
+              <div className="flex items-center space-x-4">
+                <div className={t.type === 'income' ? "text-emerald-500" : "text-rose-500"}>
+                  {t.type === 'income' ? <CheckCircle2 className="h-6 w-6" /> : <AlertCircle className="h-6 w-6" />}
+                </div>
+                <div>
+                  <div className="flex flex-col">
+                    <p className="font-bold text-sm leading-tight">{clientName || t.category}</p>
+                    {clientName && <p className="text-[10px] text-primary font-bold uppercase tracking-tight">{t.category}</p>}
+                    <p className="text-[10px] text-muted-foreground">
+                      {format(t.date.toDate(), "d 'de' MMMM", { locale: es })}
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <CollectionSwitch transaction={t} onConfirm={fetchPending} />
+              <div className="flex items-center space-x-6">
+                <div className="text-right">
+                  <p className="font-bold text-sm">
+                    {t.currency} {t.amount.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t.type === 'income' ? 'Ingreso' : 'Egreso'}</p>
+                </div>
+                
+                <CollectionSwitch transaction={t} onConfirm={fetchData} />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );

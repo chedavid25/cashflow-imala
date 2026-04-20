@@ -25,8 +25,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
-import { CreateClientModal } from "@/components/clients/create-client-modal";
-import { CategoryManagerModal } from "./category-manager-modal";
+import { CategorySelectionModal } from "./category-selection-modal";
+import { ClientSelectionModal } from "./client-selection-modal";
 
 interface QuickRegisterProps {
   isOpen: boolean;
@@ -46,9 +46,9 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Modals state
-  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+  // Selection Modals state
+  const [isClientSelectOpen, setIsClientSelectOpen] = useState(false);
+  const [isCatSelectOpen, setIsCatSelectOpen] = useState(false);
 
   // Form state
   const [amount, setAmount] = useState("");
@@ -137,10 +137,10 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
   return (
     <>
       <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-        <Card className="w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border-none bg-[#2a2a2a] text-white animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
-          <div className="p-6 space-y-7">
+        <Card className="w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border-none bg-card text-card-foreground animate-in slide-in-from-bottom-full duration-300 overflow-hidden max-h-[92vh] flex flex-col">
+          <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
             <div className="flex items-center justify-between">
-              <div className="flex bg-[#1a1a1a] rounded-xl p-1.5 border border-white/5">
+              <div className="flex bg-muted rounded-xl p-1.5 border border-border">
                 <button 
                   onClick={() => {
                     setType('expense');
@@ -149,8 +149,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                   className={cn(
                     "px-6 py-2 rounded-lg text-xs font-bold transition-all", 
                     type === 'expense' 
-                      ? "bg-[#333333] text-white shadow-lg ring-1 ring-white/10" 
-                      : "text-white/40 hover:text-white/60"
+                      ? "bg-accent text-foreground shadow-sm ring-1 ring-border" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Gasto
@@ -163,8 +163,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                   className={cn(
                     "px-6 py-2 rounded-lg text-xs font-bold transition-all", 
                     type === 'income' 
-                      ? "bg-[#333333] text-white shadow-lg ring-1 ring-white/10" 
-                      : "text-white/40 hover:text-white/60"
+                      ? "bg-accent text-foreground shadow-sm ring-1 ring-border" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Ingreso
@@ -174,7 +174,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                 variant="ghost" 
                 size="icon" 
                 onClick={onClose} 
-                className="rounded-full hover:bg-white/10 text-white/60 hover:text-white"
+                className="rounded-full hover:bg-accent text-muted-foreground hover:text-foreground"
               >
                 <X className="h-6 w-6" />
               </Button>
@@ -190,8 +190,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className={cn(
-                      "w-full bg-transparent text-6xl font-bold text-center focus:outline-none placeholder:text-white/10 selection:bg-primary/30 transition-colors",
-                      isUSD ? "text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.2)]" : "text-white"
+                      "w-full bg-transparent text-5xl sm:text-6xl font-bold text-center focus:outline-none placeholder:text-muted-foreground/30 selection:bg-primary/30 transition-colors",
+                      isUSD ? "text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.2)]" : "text-foreground"
                     )}
                   />
                   {isUSD && (
@@ -200,20 +200,14 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em]">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">
                   {isUSD ? 'DÓLARES' : 'PESOS ARGENTINOS'} • MOVER CAPITAL
                 </p>
               </div>
 
               <div className="relative">
                 <div className="flex items-center justify-between mb-3 px-1">
-                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Categoría</span>
-                  <button 
-                    onClick={() => setIsCatModalOpen(true)}
-                    className="flex items-center text-[10px] font-black text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
-                  >
-                    <Settings2 className="mr-1.5 h-3 w-3" /> Editar
-                  </button>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Categoría</span>
                 </div>
                 <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1 custom-scrollbar">
                   {categories
@@ -227,8 +221,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                           className={cn(
                             "flex items-center space-x-2 px-3 py-2 rounded-xl transition-all border",
                             category === item.name 
-                              ? "border-primary bg-primary/20 text-white shadow-[0_0_15px_rgba(var(--primary),0.1)]" 
-                              : "border-white/5 bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10"
+                              ? "border-primary bg-primary/20 text-foreground shadow-[0_0_15px_rgba(var(--primary),0.1)]" 
+                              : "border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-accent"
                           )}
                         >
                           <Icon className="h-3 w-3" />
@@ -237,8 +231,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                       );
                   })}
                   <button
-                    onClick={() => setIsCatModalOpen(true)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-xl transition-all border border-dashed border-white/10 text-white/20 hover:text-primary hover:border-primary/50 bg-transparent"
+                    onClick={() => setIsCatSelectOpen(true)}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-xl transition-all border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/50 bg-transparent"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -247,14 +241,14 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
 
               <div className="space-y-4">
                 {/* Selector de Estado (Segmentado Premium) */}
-                <div className="bg-[#1a1a1a] p-1 rounded-2xl flex border border-white/5 shadow-inner">
+                <div className="bg-muted p-1 rounded-2xl flex border border-border shadow-inner">
                   <button 
                     onClick={() => setIsPending(false)}
                     className={cn(
                       "flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl text-xs font-black transition-all",
                       !isPending 
                         ? "bg-emerald-500/20 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/20" 
-                        : "text-white/20 hover:text-white/40"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <CheckCircle2 className="h-4 w-4" />
@@ -266,7 +260,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                       "flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl text-xs font-black transition-all",
                       isPending 
                         ? "bg-amber-500/20 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)] border border-amber-500/20" 
-                        : "text-white/20 hover:text-white/40"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Clock className="h-4 w-4" />
@@ -279,14 +273,14 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                   {type === 'expense' && (
                     <div className="flex items-center justify-between px-2">
                       <div className="flex items-center space-x-2">
-                        <Users className="h-3 w-3 text-white/20" />
-                        <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Asignar {type === 'income' ? 'Cliente' : 'Proveedor'}</span>
+                        <Users className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Asignar {type === 'income' ? 'Cliente' : 'Proveedor'}</span>
                       </div>
                       <button 
                         onClick={() => setIncludeContact(!includeContact)}
                         className={cn(
                           "w-10 h-5 rounded-full relative transition-all border",
-                          includeContact ? "bg-primary border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.3)]" : "bg-white/5 border-white/5"
+                          includeContact ? "bg-primary border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.3)]" : "bg-muted border-border"
                         )}
                       >
                         <div className={cn(
@@ -309,7 +303,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                               "flex items-center space-x-2 px-3 py-2 rounded-xl transition-all border text-[10px] font-bold",
                               clientId === c.id 
                                 ? "bg-primary/20 text-primary border-primary/50 shadow-lg" 
-                                : "bg-white/5 text-white/40 border-white/5 hover:text-white/60"
+                                : "bg-muted text-muted-foreground border-border hover:text-foreground"
                             )}
                           >
                             <Users className="h-3 w-3" />
@@ -317,8 +311,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                           </button>
                         ))}
                         <button
-                          onClick={() => setIsClientModalOpen(true)}
-                          className="flex items-center justify-center h-8 w-8 rounded-xl bg-white/5 border border-dashed border-white/10 text-white/20 hover:text-primary hover:border-primary/50"
+                          onClick={() => setIsClientSelectOpen(true)}
+                          className="flex items-center justify-center h-8 w-8 rounded-xl bg-muted border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/50"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
@@ -327,10 +321,10 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                   )}
 
                   {/* Selector de Cuenta en Botones (Pills de Colores Persistentes) */}
-                  <div className="space-y-2 pt-3 border-t border-white/5">
+                  <div className="space-y-2 pt-3 border-t border-border">
                     <div className="flex items-center space-x-2 px-1">
-                      <Landmark className="h-3 w-3 text-white/20" />
-                      <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Cuenta de origen</span>
+                      <Landmark className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cuenta de origen</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {accounts.map(acc => {
@@ -342,7 +336,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                           if (name.includes('efectivo')) return { base: "text-emerald-500/60 bg-emerald-500/5 border-emerald-500/10", active: "bg-emerald-600/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]" };
                           if (name.includes('galicia')) return { base: "text-orange-500/60 bg-orange-500/5 border-orange-500/10", active: "bg-orange-600/20 text-orange-400 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.2)]" };
                           if (acc.currency === 'USD') return { base: "text-cyan-500/60 bg-cyan-500/5 border-cyan-500/10", active: "bg-cyan-600/20 text-cyan-400 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]" };
-                          return { base: "text-white/20 bg-white/5 border-white/5", active: "bg-primary/20 text-primary border-primary/50 shadow-lg" };
+                          return { base: "text-muted-foreground bg-muted border-border", active: "bg-primary/20 text-primary border-primary/50 shadow-lg" };
                         };
                         const styles = getAccountColor();
 
@@ -365,7 +359,9 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                 </div>
               </div>
             </div>
+          </div>
 
+          <div className="p-6 border-t border-border/50 bg-card">
             <Button 
               className="w-full rounded-2xl h-16 text-lg font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/40 transition-all active:scale-[0.98]"
               disabled={loading || !amount || !category || !accountId}
@@ -377,17 +373,20 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
         </Card>
       </div>
 
-      <CreateClientModal 
-        isOpen={isClientModalOpen}
-        onClose={() => setIsClientModalOpen(false)}
-        onSuccess={fetchInitialData}
+      <CategorySelectionModal 
+        isOpen={isCatSelectOpen}
+        onClose={() => setIsCatSelectOpen(false)}
+        categories={categories}
+        type={type}
+        onSelect={setCategory}
       />
 
-      <CategoryManagerModal 
-        isOpen={isCatModalOpen}
-        onClose={() => setIsCatModalOpen(false)}
-        categories={categories}
-        onRefresh={fetchInitialData}
+      <ClientSelectionModal 
+        isOpen={isClientSelectOpen}
+        onClose={() => setIsClientSelectOpen(false)}
+        clients={clients}
+        type={type}
+        onSelect={setClientId}
       />
     </>
   );

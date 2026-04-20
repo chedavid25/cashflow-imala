@@ -63,7 +63,7 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
       <form onSubmit={handleSubmit} className="space-y-6 pb-4">
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase ml-1">Tipo de Cuenta</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Tipo de Cuenta</label>
             <div className="grid grid-cols-2 gap-3">
               {accountTypes.map((item) => {
                 const Icon = item.icon;
@@ -75,11 +75,11 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
                     className={cn(
                       "flex items-center space-x-3 h-14 rounded-2xl border px-4 transition-all",
                       type === item.id 
-                        ? "bg-primary/10 border-primary text-white" 
-                        : "bg-[#1a1a1a] border-white/5 text-white/40"
+                        ? "bg-primary/10 border-primary text-foreground" 
+                        : "bg-muted border-border text-muted-foreground"
                     )}
                   >
-                    <Icon className={cn("h-5 w-5", type === item.id ? "text-primary" : "text-white/20")} />
+                    <Icon className={cn("h-5 w-5", type === item.id ? "text-primary" : "text-muted-foreground/50")} />
                     <span className="text-sm font-bold">{item.label}</span>
                   </button>
                 );
@@ -88,27 +88,27 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase ml-1">Nombre Identificador</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Nombre Identificador</label>
             <input 
               required
               type="text"
               placeholder="Ej: BBVA Personal, Galicia Empresa, Efectivo..."
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#1a1a1a] rounded-2xl h-14 px-5 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+              className="w-full bg-muted rounded-2xl h-14 px-5 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">Moneda</label>
-              <div className="flex bg-[#1a1a1a] rounded-2xl p-1 border border-white/5 h-14 items-center">
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Moneda</label>
+              <div className="flex bg-muted rounded-2xl p-1 border border-border h-14 items-center">
                 <button
                   type="button"
                   onClick={() => setCurrency('ARS')}
                   className={cn(
                     "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'ARS' ? "bg-[#333333] text-white" : "text-white/20"
+                    currency === 'ARS' ? "bg-accent text-foreground" : "text-muted-foreground/50"
                   )}
                 >
                   ARS
@@ -118,7 +118,7 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
                   onClick={() => setCurrency('USD')}
                   className={cn(
                     "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'USD' ? "bg-[#333333] text-white" : "text-white/20"
+                    currency === 'USD' ? "bg-accent text-foreground" : "text-muted-foreground/50"
                   )}
                 >
                   USD
@@ -126,15 +126,15 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">Saldo Inicial</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Saldo Inicial</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 font-bold">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 font-bold">$</span>
                 <input 
                   type="number"
                   placeholder="0.00"
                   value={balance}
                   onChange={(e) => setBalance(e.target.value)}
-                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-8 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                  className="w-full bg-muted rounded-2xl h-14 pl-8 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
                 />
               </div>
             </div>

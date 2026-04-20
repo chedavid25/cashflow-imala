@@ -38,7 +38,7 @@ export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMen
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.1 }}
             className={cn(
-              "absolute z-[60] mt-2 w-48 rounded-2xl bg-[#2a2a2a] border border-white/5 p-2 shadow-2xl ring-1 ring-black/20",
+              "absolute z-[60] mt-2 w-48 rounded-2xl bg-card border border-border p-2 shadow-2xl ring-1 ring-black/20",
               align === 'right' ? "right-0" : "left-0"
             )}
           >
@@ -66,7 +66,7 @@ export function DropdownItem({ onClick, children, variant = 'default' }: Dropdow
         "flex w-full items-center px-4 py-2.5 text-xs font-bold rounded-xl transition-colors",
         variant === 'danger' 
           ? "text-rose-500 hover:bg-rose-500/10" 
-          : "text-white/60 hover:bg-white/5 hover:text-white"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
       )}
     >
       {children}

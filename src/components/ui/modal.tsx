@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={cn(
-              "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#2a2a2a] p-6 shadow-2xl border-none text-white overflow-hidden",
+              "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card p-6 shadow-2xl border-none text-card-foreground overflow-hidden",
               className
             )}
           >
@@ -54,7 +54,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
                 variant="ghost" 
                 size="icon" 
                 onClick={onClose}
-                className="rounded-full hover:bg-white/10 text-white/60 hover:text-white"
+                className="rounded-full hover:bg-accent text-muted-foreground hover:text-foreground"
               >
                 <X className="h-6 w-6" />
               </Button>

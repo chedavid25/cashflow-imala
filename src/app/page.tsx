@@ -124,34 +124,34 @@ export default function DashboardPage() {
                     <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       {card.title}
                     </CardTitle>
-                    <div className={`${card.bg} ${card.color} p-2 rounded-xl ring-1 ring-white/5 transition-transform group-hover:scale-110`}>
+                    <div className={`${card.bg} ${card.color} p-2 rounded-xl ring-1 ring-border transition-transform group-hover:scale-110`}>
                       <Icon className="h-4 w-4" />
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1">
-                      <div className="text-xl font-black tracking-tight flex items-baseline justify-between">
+                      <div className="text-lg sm:text-xl font-black tracking-tight flex flex-col sm:flex-row sm:items-baseline sm:justify-between leading-tight">
                         {loading ? (
                           <div className="h-7 w-24 animate-pulse rounded bg-white/5" />
                         ) : (
                           <>
-                            <span>{formatCurrency(card.ars, 'ARS')}</span>
-                            <span className="text-[10px] font-bold text-white/20 ml-2">ARS</span>
+                            <span className="truncate">{formatCurrency(card.ars, 'ARS')}</span>
+                            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground sm:ml-2">ARS</span>
                           </>
                         )}
                       </div>
-                      <div className="text-sm font-bold tracking-tight flex items-baseline justify-between text-white/60">
+                      <div className="text-xs sm:text-sm font-bold tracking-tight flex flex-col sm:flex-row sm:items-baseline sm:justify-between text-foreground/70 leading-tight">
                         {loading ? (
                           <div className="h-4 w-16 animate-pulse rounded bg-white/5" />
                         ) : (
                           <>
-                            <span>{formatCurrency(card.usd, 'USD')}</span>
-                            <span className="text-[10px] font-bold text-white/10 ml-2">USD</span>
+                            <span className="truncate">{formatCurrency(card.usd, 'USD')}</span>
+                            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground/50 sm:ml-2">USD</span>
                           </>
                         )}
                       </div>
                     </div>
-                    <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest pt-2 border-t border-white/5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-2 border-t border-border">
                       {card.description}
                     </p>
                   </CardContent>

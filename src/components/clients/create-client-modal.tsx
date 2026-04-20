@@ -74,51 +74,51 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
       <form onSubmit={handleSubmit} className="space-y-6 pb-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase ml-1">Nombre Comercial</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Nombre Comercial</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
               <input 
                 required
                 type="text"
                 placeholder="Nombre del cliente o empresa"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">Razón Social</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Razón Social</label>
               <div className="relative">
-                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
                 <input 
                   type="text"
                   placeholder="Sociedad / Titular"
                   value={razonSocial}
                   onChange={(e) => setRazonSocial(e.target.value)}
-                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                  className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">CUIT</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">CUIT</label>
               <div className="relative">
-                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                <FileText className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
                 <input 
                   type="text"
                   placeholder="20-XXXXXXXX-X"
                   value={cuit}
                   onChange={(e) => setCuit(e.target.value)}
-                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                  className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase ml-1">Tipo de Facturación</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Tipo de Facturación</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -126,8 +126,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                 className={cn(
                   "h-14 rounded-2xl border text-sm font-bold transition-all",
                   billingType === 'monthly_fee' 
-                    ? "bg-primary/10 border-primary text-white" 
-                    : "bg-[#1a1a1a] border-white/5 text-white/40"
+                    ? "bg-primary/10 border-primary text-foreground" 
+                    : "bg-muted border-border text-muted-foreground"
                 )}
               >
                 Abono Mensual
@@ -138,8 +138,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                 className={cn(
                   "h-14 rounded-2xl border text-sm font-bold transition-all",
                   billingType === 'one_shot' 
-                    ? "bg-primary/10 border-primary text-white" 
-                    : "bg-[#1a1a1a] border-white/5 text-white/40"
+                    ? "bg-primary/10 border-primary text-foreground" 
+                    : "bg-muted border-border text-muted-foreground"
                 )}
               >
                 Proyecto Único
@@ -149,14 +149,14 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">Moneda</label>
-              <div className="flex bg-[#1a1a1a] rounded-2xl p-1 border border-white/5 h-14 items-center">
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Moneda</label>
+              <div className="flex bg-muted rounded-2xl p-1 border border-border h-14 items-center">
                 <button
                   type="button"
                   onClick={() => setCurrency('ARS')}
                   className={cn(
                     "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'ARS' ? "bg-[#333333] text-white" : "text-white/20"
+                    currency === 'ARS' ? "bg-accent text-foreground" : "text-muted-foreground/50"
                   )}
                 >
                   ARS
@@ -166,7 +166,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                   onClick={() => setCurrency('USD')}
                   className={cn(
                     "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'USD' ? "bg-[#333333] text-white" : "text-white/20"
+                    currency === 'USD' ? "bg-accent text-foreground" : "text-muted-foreground/50"
                   )}
                 >
                   USD
@@ -174,28 +174,28 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/40 uppercase ml-1">Presupuesto / Fee</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Presupuesto / Fee</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 font-bold">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
                 <input 
                   type="number"
                   placeholder="0.00"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-8 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all"
+                  className="w-full bg-muted rounded-2xl h-14 pl-8 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase ml-1">Cuenta de Cobro Predeterminada</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Cuenta de Cobro Predeterminada</label>
             <div className="relative">
-              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
               <select
                 value={defaultTargetAccount}
                 onChange={(e) => setDefaultTargetAccount(e.target.value)}
-                className="w-full bg-[#1a1a1a] rounded-2xl h-14 pl-12 pr-4 border border-white/5 focus:border-primary/50 focus:outline-none text-sm transition-all appearance-none text-white/80"
+                className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all appearance-none text-foreground"
               >
                 <option value="">Seleccionar cuenta...</option>
                 {accounts.map(acc => (
@@ -203,7 +203,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                 ))}
               </select>
             </div>
-            <p className="text-[10px] text-white/20 ml-1">Esta cuenta se usará por defecto al facturar abonos.</p>
+            <p className="text-[10px] text-muted-foreground ml-1">Esta cuenta se usará por defecto al facturar abonos.</p>
           </div>
         </div>
 

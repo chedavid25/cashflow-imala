@@ -7,9 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useSidebar } from "@/context/sidebar-context";
+import { cn } from "@/lib/utils";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { isCollapsed } = useSidebar();
 
   if (loading) {
     return (
@@ -44,10 +47,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full overflow-x-hidden relative">
       <Sidebar />
-      <main className="pb-20 md:pb-0 md:pl-64">
-        <div className="p-6 lg:p-10">
+      <main className={cn(
+        "w-full pb-20 md:pb-0 transition-all duration-300",
+        isCollapsed ? "md:pl-20" : "md:pl-64"
+      )}>
+        <div className="p-4 sm:p-6 lg:p-10 w-full max-w-full">
           {children}
         </div>
       </main>
