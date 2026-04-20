@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Moon,
-  Sun
+  Sun,
+  ReceiptText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/accounts", label: "Cuentas", icon: Wallet },
   { href: "/clients", label: "Clientes", icon: Users },
+  { href: "/billing", label: "Facturación", icon: ReceiptText },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
   { href: "/settings", label: "Ajustes", icon: Settings },
 ];

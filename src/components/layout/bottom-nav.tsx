@@ -3,15 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, Users, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, Wallet, Users, BarChart3, Settings, ReceiptText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/accounts", label: "Cuentas", icon: Wallet },
   { href: "/clients", label: "Clientes", icon: Users },
-  { href: "/reports", label: "Reportes", icon: BarChart3 },
-  { href: "/settings", label: "Ajustes", icon: Settings },
+  { href: "/billing", label: "Fac.", icon: ReceiptText },
+  { href: "/reports", label: "Rep.", icon: BarChart3 },
 ];
 
 export function BottomNav() {
