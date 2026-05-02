@@ -7,21 +7,16 @@ import { accountService, Account } from "@/lib/services/account-service";
 import { transactionService, Transaction } from "@/lib/services/transaction-service";
 import { useAuth } from "@/context/AuthContext";
 import { 
-  Landmark, 
-  ArrowLeft, 
-  DollarSign, 
-  FileText, 
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  CreditCard,
-  Banknote,
-  Wallet
+  Wallet,
+  CalendarDays,
+  Filter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { startOfMonth, endOfMonth, isWithinInterval, subMonths, format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function AccountDetailPage() {
   const { id } = useParams();
@@ -29,8 +24,9 @@ export default function AccountDetailPage() {
   const { user } = useAuth();
   
   const [account, setAccount] = useState<Account | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterMonth, setFilterMonth] = useState<string>("all"); // "YYYY-MM" or "all"
 
   const fetchData = async () => {
     if (!user || !id) return;
@@ -45,12 +41,11 @@ export default function AccountDetailPage() {
       }
       setAccount(currentAccount);
 
-      const allTransactions = await transactionService.getTransactions(user.uid);
-      // Filter transactions where this account is either the source or destination
-      const accountTransactions = allTransactions.filter(t => 
+      const transactions = await transactionService.getTransactions(user.uid);
+      const accountTransactions = transactions.filter(t => 
         t.accountId === id || t.toAccountId === id
       );
-      setTransactions(accountTransactions);
+      setAllTransactions(accountTransactions);
     } catch (error) {
       console.error("Error fetching account details:", error);
     } finally {
@@ -77,6 +72,31 @@ export default function AccountDetailPage() {
       default: return Landmark;
     }
   };
+
+  const filteredTransactions = React.useMemo(() => {
+    if (filterMonth === "all") return allTransactions;
+    
+    const [year, month] = filterMonth.split("-").map(Number);
+    const start = new Date(year, month - 1, 1);
+    const end = endOfMonth(start);
+    
+    return allTransactions.filter(t => {
+      const date = t.date.toDate();
+      return isWithinInterval(date, { start, end });
+    });
+  }, [allTransactions, filterMonth]);
+
+  const months = React.useMemo(() => {
+    const list = [];
+    for (let i = 0; i < 12; i++) {
+      const date = subMonths(new Date(), i);
+      list.push({
+        value: format(date, "yyyy-MM"),
+        label: format(date, "MMMM yyyy", { locale: es })
+      });
+    }
+    return list;
+  }, []);
 
   if (loading) {
     return (
@@ -124,14 +144,31 @@ export default function AccountDetailPage() {
         </div>
 
         <Card className="border-none bg-card shadow-xl rounded-3xl overflow-hidden">
-          <CardHeader className="border-b border-border px-8 py-6">
+          <CardHeader className="border-b border-border px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <CardTitle className="text-lg font-bold flex items-center">
               <FileText className="mr-3 h-5 w-5 text-primary" />
               Resumen de Movimientos
             </CardTitle>
+            
+            <div className="flex items-center space-x-3 bg-muted/50 p-1.5 rounded-2xl border border-border/50">
+              <div className="flex items-center px-3 text-muted-foreground">
+                <CalendarDays className="h-4 w-4 mr-2" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Período:</span>
+              </div>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="bg-background text-xs font-bold py-2 px-4 rounded-xl border-none focus:ring-2 focus:ring-primary/20 cursor-pointer outline-none transition-all hover:bg-muted"
+              >
+                <option value="all">Todo el historial</option>
+                {months.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
-            {transactions.length > 0 ? (
+            {filteredTransactions.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -143,7 +180,7 @@ export default function AccountDetailPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {transactions.map((t) => (
+                    {filteredTransactions.map((t) => (
                       <tr key={t.id} className="hover:bg-muted/50 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
