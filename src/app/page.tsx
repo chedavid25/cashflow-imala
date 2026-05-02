@@ -21,6 +21,8 @@ import { TransferModal } from "@/components/transactions/transfer-modal";
 import { TransactionHistory } from "@/components/transactions/transaction-history";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { transactionService, Transaction } from "@/lib/services/transaction-service";
+import { exportTransactionsToCSV } from "@/lib/utils/export-utils";
 
 export default function DashboardPage() {
   const { metrics, transactions, loading, refreshData } = useDashboardData();
@@ -179,12 +181,10 @@ export default function DashboardPage() {
                   variant="ghost" 
                   size="sm" 
                   className="h-8 text-[10px]"
-                  onClick={() => {
-                    const { transactionService } = require("@/lib/services/transaction-service");
-                    transactionService.getTransactions(user?.uid).then(t => {
-                      const { exportTransactionsToCSV } = require("@/lib/utils/export-utils");
-                      exportTransactionsToCSV(t);
-                    });
+                  onClick={async () => {
+                    if (!user) return;
+                    const t = await transactionService.getTransactions(user.uid);
+                    exportTransactionsToCSV(t);
                   }}
                 >
                   Exportar CSV
