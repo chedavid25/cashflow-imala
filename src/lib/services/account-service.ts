@@ -14,7 +14,7 @@ export interface Account {
   id?: string;
   userId: string;
   name: string;
-  type: 'bank' | 'cash' | 'credit_card' | 'investment';
+  type: 'debit_card' | 'cash' | 'credit_card';
   balance: number;
   currency: 'ARS' | 'USD';
 }

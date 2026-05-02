@@ -71,10 +71,9 @@ export default function AccountDetailPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'bank': return Landmark;
+      case 'debit_card': return Landmark;
       case 'credit_card': return CreditCard;
       case 'cash': return Banknote;
-      case 'investment': return Wallet;
       default: return Landmark;
     }
   };
@@ -112,7 +111,8 @@ export default function AccountDetailPage() {
             <div>
               <h2 className="text-3xl font-black tracking-tight">{account?.name}</h2>
               <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest">
-                {account?.type} • {account?.currency}
+                {account?.type === 'debit_card' ? 'T. Débito' : 
+                 account?.type === 'credit_card' ? 'T. Crédito' : 'Efectivo'} • {account?.currency}
               </p>
             </div>
           </div>

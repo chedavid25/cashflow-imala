@@ -15,10 +15,9 @@ interface CreateAccountModalProps {
 }
 
 const accountTypes = [
-  { id: 'bank', label: 'Banco', icon: Landmark },
+  { id: 'debit_card', label: 'T. Débito', icon: Landmark },
   { id: 'credit_card', label: 'T. Crédito', icon: CreditCard },
   { id: 'cash', label: 'Efectivo', icon: Banknote },
-  { id: 'investment', label: 'Inversión', icon: Wallet },
 ];
 
 export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccountModalProps) {
@@ -27,7 +26,7 @@ export function CreateAccountModal({ isOpen, onClose, onSuccess }: CreateAccount
   
   // Form state
   const [name, setName] = useState("");
-  const [type, setType] = useState<'bank' | 'cash' | 'credit_card' | 'investment'>('bank');
+  const [type, setType] = useState<'debit_card' | 'cash' | 'credit_card'>('debit_card');
   const [balance, setBalance] = useState("");
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
 

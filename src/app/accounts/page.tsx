@@ -58,20 +58,18 @@ export default function AccountsPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'bank': return Landmark;
+      case 'debit_card': return Landmark;
       case 'credit_card': return CreditCard;
       case 'cash': return Banknote;
-      case 'investment': return Wallet;
       default: return Landmark;
     }
   };
 
   const getColor = (type: string) => {
     switch (type) {
-      case 'bank': return "text-blue-500 bg-blue-500/10";
+      case 'debit_card': return "text-blue-500 bg-blue-500/10";
       case 'credit_card': return "text-rose-500 bg-rose-500/10";
       case 'cash': return "text-emerald-500 bg-emerald-500/10";
-      case 'investment': return "text-amber-500 bg-amber-500/10";
       default: return "text-primary bg-primary/10";
     }
   };
