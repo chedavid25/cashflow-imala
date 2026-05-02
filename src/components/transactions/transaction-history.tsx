@@ -8,7 +8,9 @@ import {
   ArrowDownRight, 
   ArrowRightLeft, 
   TrendingUp,
-  Clock
+  Clock,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,10 +20,13 @@ import { es } from "date-fns/locale";
 interface TransactionHistoryProps {
   transactions: Transaction[];
   loading: boolean;
+  onDelete?: () => void;
 }
 
-export function TransactionHistory({ transactions, loading }: TransactionHistoryProps) {
+export function TransactionHistory({ transactions, loading, onDelete }: TransactionHistoryProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const { transactionService } = require("@/lib/services/transaction-service");
   const itemsPerPage = 5;
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -133,7 +138,7 @@ export function TransactionHistory({ transactions, loading }: TransactionHistory
                     </span>
                   </div>
                 </div>
-                <div className="text-right flex flex-col items-end">
+                <div className="text-right flex flex-col items-end shrink-0 min-w-[80px]">
                   <span className={cn(
                     "text-sm font-black tracking-tight",
                     t.type === 'income' ? "text-emerald-500" : 
@@ -142,11 +147,39 @@ export function TransactionHistory({ transactions, loading }: TransactionHistory
                     {t.type === 'expense' || t.type === 'investment' ? "-" : t.type === 'income' ? "+" : ""}
                     {formatCurrency(t.amount, t.currency)}
                   </span>
-                  {t.type === 'transfer' && (
-                    <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
-                      Transferencia
-                    </span>
-                  )}
+                  
+                  <div className="flex items-center space-x-2 mt-1">
+                    {t.type === 'transfer' && (
+                      <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
+                        Transferencia
+                      </span>
+                    )}
+                    
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!t.id || !confirm("¿Estás seguro de eliminar este registro? El saldo se revertirá automáticamente.")) return;
+                        
+                        setDeletingId(t.id);
+                        try {
+                          await transactionService.deleteTransaction(t.id);
+                          if (onDelete) onDelete();
+                        } catch (error) {
+                          console.error("Error al eliminar:", error);
+                        } finally {
+                          setDeletingId(null);
+                        }
+                      }}
+                      disabled={deletingId === t.id}
+                      className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                    >
+                      {deletingId === t.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

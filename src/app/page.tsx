@@ -170,7 +170,11 @@ export default function DashboardPage() {
         <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
             <PendingConfirmations key={loading ? 'loading' : 'ready'} />
-            <TransactionHistory transactions={transactions} loading={loading} />
+            <TransactionHistory 
+              transactions={transactions} 
+              loading={loading} 
+              onDelete={refreshData}
+            />
           </div>
           
           <div className="space-y-6">

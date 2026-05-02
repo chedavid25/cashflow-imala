@@ -6,6 +6,7 @@ import {
   where, 
   doc, 
   updateDoc, 
+  deleteDoc,
   runTransaction,
   Timestamp,
   orderBy
@@ -139,5 +140,46 @@ export const transactionService = {
 
     const docRef = await addDoc(collection(db, "transactions"), transfer);
     return docRef.id;
+  },
+
+  async deleteTransaction(transactionId: string): Promise<void> {
+    const transactionRef = doc(db, "transactions", transactionId);
+    
+    await runTransaction(db, async (txn) => {
+      const tSnap = await txn.get(transactionRef);
+      if (!tSnap.exists()) return;
+      
+      const tData = tSnap.data() as Transaction;
+      
+      // If completed, reverse the balance impact
+      if (tData.status === 'completed') {
+        const accountRef = doc(db, "accounts", tData.accountId);
+        const aSnap = await txn.get(accountRef);
+        
+        if (aSnap.exists()) {
+          const balance = aSnap.data().balance;
+          // Reverse logic: if it was income, subtract. If it was expense, add.
+          const reverseModifier = tData.type === 'income' ? -tData.amount : tData.amount;
+          
+          txn.update(accountRef, {
+            balance: balance + reverseModifier
+          });
+        }
+
+        // If it was a transfer, also reverse the destination account
+        if (tData.type === 'transfer' && tData.toAccountId) {
+          const toAccountRef = doc(db, "accounts", tData.toAccountId);
+          const toSnap = await txn.get(toAccountRef);
+          if (toSnap.exists()) {
+            const incomingAmount = (tData as any).toAmount || tData.amount;
+            txn.update(toAccountRef, {
+              balance: toSnap.data().balance - incomingAmount
+            });
+          }
+        }
+      }
+
+      txn.delete(transactionRef);
+    });
   }
 };
