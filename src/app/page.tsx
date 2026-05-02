@@ -112,12 +112,6 @@ export default function DashboardPage() {
               Aquí está el resumen financiero de Imalá para este mes.
             </p>
           </div>
-          <Button 
-            className="rounded-2xl shadow-lg shadow-primary/20 h-12 px-6"
-            onClick={() => handleQuickAction('expense')}
-          >
-            <Plus className="mr-2 h-5 w-5" /> Registro Rápido
-          </Button>
         </motion.div>
 
         <motion.div variants={container} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
