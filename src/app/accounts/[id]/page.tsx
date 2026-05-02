@@ -9,7 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 import { 
   Wallet,
   CalendarDays,
-  Filter
+  Filter,
+  Landmark,
+  CreditCard,
+  Banknote
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
