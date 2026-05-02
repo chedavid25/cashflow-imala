@@ -26,7 +26,13 @@ export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMen
 
   return (
     <div className="relative" ref={menuRef}>
-      <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
+      <div 
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }} 
+        className="cursor-pointer"
+      >
         {trigger}
       </div>
 
@@ -42,7 +48,10 @@ export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMen
               align === 'right' ? "right-0" : "left-0"
             )}
           >
-            <div onClick={() => setIsOpen(false)}>
+            <div onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}>
               {children}
             </div>
           </motion.div>
@@ -61,7 +70,10 @@ interface DropdownItemProps {
 export function DropdownItem({ onClick, children, variant = 'default' }: DropdownItemProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       className={cn(
         "flex w-full items-center px-4 py-2.5 text-xs font-bold rounded-xl transition-colors",
         variant === 'danger' 

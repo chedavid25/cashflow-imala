@@ -14,7 +14,8 @@ import {
   Sun,
   ReceiptText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +26,7 @@ import { useSidebar } from "@/context/sidebar-context";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/accounts", label: "Cuentas", icon: Wallet },
+  { href: "/investments", label: "Inversiones", icon: TrendingUp },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/billing", label: "Facturación", icon: ReceiptText },
   { href: "/reports", label: "Reportes", icon: BarChart3 },

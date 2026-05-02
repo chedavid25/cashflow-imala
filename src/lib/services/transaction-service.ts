@@ -17,6 +17,7 @@ export interface Transaction {
   id?: string;
   userId: string;
   clientId?: string;
+  assetId?: string;
   type: 'income' | 'expense' | 'transfer' | 'investment';
   category: string;
   amount: number;
@@ -28,6 +29,7 @@ export interface Transaction {
   isRecurring: boolean;
   paidBy: 'David' | 'Lucre' | 'Shared';
   accountId: string;
+  toAccountId?: string; // Para transferencias entre cuentas
 }
 
 export const transactionService = {
@@ -96,6 +98,46 @@ export const transactionService = {
         accountId: finalData.accountId,
         date: Timestamp.now() 
       });
+
+      // Update linked asset if it's an investment
+      if (tData.assetId && tData.type === 'investment') {
+        const assetRef = doc(db, "assets", tData.assetId);
+        const assetSnap = await txn.get(assetRef);
+        if (assetSnap.exists()) {
+          const assetData = assetSnap.data();
+          txn.update(assetRef, {
+            initialCapital: (assetData.initialCapital || 0) + finalData.amount,
+            currentValue: (assetData.currentValue || 0) + finalData.amount,
+            paidInstallments: (assetData.paidInstallments || 0) + 1
+          });
+        }
+      }
     });
+  },
+
+  async createTransfer(transfer: Omit<Transaction, 'id'> & { toAmount?: number }): Promise<string> {
+    const fromAccountRef = doc(db, "accounts", transfer.accountId);
+    const toAccountRef = doc(db, "accounts", transfer.toAccountId!);
+    
+    await runTransaction(db, async (txn) => {
+      const fromSnap = await txn.get(fromAccountRef);
+      const toSnap = await txn.get(toAccountRef);
+      
+      if (!fromSnap.exists() || !toSnap.exists()) throw new Error("Cuentas no encontradas");
+      
+      // Update from account
+      txn.update(fromAccountRef, {
+        balance: fromSnap.data().balance - transfer.amount
+      });
+      
+      // Update to account (incoming amount can be different if currency exchange happened)
+      const incomingAmount = transfer.toAmount || transfer.amount;
+      txn.update(toAccountRef, {
+        balance: toSnap.data().balance + incomingAmount
+      });
+    });
+
+    const docRef = await addDoc(collection(db, "transactions"), transfer);
+    return docRef.id;
   }
 };

@@ -46,5 +46,10 @@ export const userService = {
   async updateCurrencyBase(uid: string, currency: 'ARS' | 'USD'): Promise<void> {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, { currencyBase: currency });
+  },
+
+  async updateProfile(uid: string, data: { displayName?: string; photoURL?: string }): Promise<void> {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, data);
   }
 };

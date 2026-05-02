@@ -27,7 +27,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           {/* Overlay */}
           <motion.div 
             initial={{ opacity: 0 }}
@@ -44,11 +44,12 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={cn(
-              "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card p-6 shadow-2xl border-none text-card-foreground overflow-hidden",
+              "relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl border-none text-card-foreground overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh]",
               className
             )}
           >
-            <div className="flex items-center justify-between mb-8">
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between p-6 pb-2">
               <h3 className="text-xl font-bold tracking-tight">{title}</h3>
               <Button 
                 variant="ghost" 
@@ -60,7 +61,8 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
               </Button>
             </div>
 
-            <div className="max-h-[70vh] overflow-y-auto no-scrollbar">
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar">
               {children}
             </div>
           </motion.div>

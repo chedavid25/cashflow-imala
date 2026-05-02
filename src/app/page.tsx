@@ -11,18 +11,22 @@ import {
   PieChart, 
   Plus,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  ArrowRightLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PendingConfirmations } from "@/components/transactions/pending-confirmations";
 import { QuickRegister } from "@/components/transactions/quick-register";
+import { TransferModal } from "@/components/transactions/transfer-modal";
+import { TransactionHistory } from "@/components/transactions/transaction-history";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
-  const { metrics, loading, refreshData } = useDashboardData();
+  const { metrics, transactions, loading, refreshData } = useDashboardData();
   const { user } = useAuth();
   const [isQuickRegisterOpen, setIsQuickRegisterOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [registerType, setRegisterType] = useState<'income' | 'expense'>('expense');
 
   const container = {
@@ -87,7 +91,7 @@ export default function DashboardPage() {
       icon: PieChart,
       color: "text-amber-500",
       bg: "bg-amber-500/10",
-      description: "Incluye cobros pendientes",
+      description: "Incluye cobros y gastos pendientes",
     },
   ];
   
@@ -164,10 +168,7 @@ export default function DashboardPage() {
         <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
             <PendingConfirmations key={loading ? 'loading' : 'ready'} />
-            
-            <Card className="min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed bg-transparent border-2">
-              Gráfico de Categorías (Próximamente)
-            </Card>
+            <TransactionHistory transactions={transactions} loading={loading} />
           </div>
           
           <div className="space-y-6">
@@ -206,6 +207,14 @@ export default function DashboardPage() {
                   <ArrowDownRight className="h-5 w-5 text-rose-500" />
                   <span className="text-[10px]">Nuevo Gasto</span>
                 </Button>
+                <Button 
+                  variant="outline" 
+                  className="rounded-xl h-20 flex-col space-y-2 bg-background/50 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all col-span-2"
+                  onClick={() => setIsTransferModalOpen(true)}
+                >
+                  <ArrowRightLeft className="h-5 w-5 text-blue-500" />
+                  <span className="text-[10px]">Transferir entre Cuentas</span>
+                </Button>
               </div>
             </Card>
           </div>
@@ -218,6 +227,14 @@ export default function DashboardPage() {
         onClose={() => setIsQuickRegisterOpen(false)}
         onSuccess={() => {
           refreshData(); 
+        }}
+      />
+
+      <TransferModal 
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSuccess={() => {
+          refreshData();
         }}
       />
     </MainLayout>

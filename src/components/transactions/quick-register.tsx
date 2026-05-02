@@ -12,14 +12,12 @@ import {
   ShoppingCart, 
   Utensils, 
   MoreHorizontal, 
-  Send,
-  Users,
-  Plus,
-  Landmark,
-  Settings2,
-  Tag,
-  CheckCircle2,
-  Clock,
+  Users, 
+  Plus, 
+  Landmark, 
+  Tag, 
+  CheckCircle2, 
+  Clock, 
   Wallet
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -56,6 +54,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
   const [accountId, setAccountId] = useState("");
   const [clientId, setClientId] = useState("");
   const [type, setType] = useState<'income' | 'expense'>(initialType);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isPending, setIsPending] = useState(false);
   const [includeContact, setIncludeContact] = useState(false);
 
@@ -107,7 +106,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
       amount: Number(amount),
       currency: selectedAccount?.currency || 'ARS',
       status: isPending ? 'pending' : 'completed',
-      date: Timestamp.now(),
+      date: Timestamp.fromDate(new Date(date + 'T12:00:00')), // Use noon to avoid timezone shifts
       isRecurring: false,
       paidBy: 'David', 
       accountId,
@@ -136,8 +135,8 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-        <Card className="w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border-none bg-card text-card-foreground animate-in slide-in-from-bottom-full duration-300 overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <Card className="w-full max-w-md rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] border-none bg-card text-card-foreground animate-in zoom-in-95 duration-300 overflow-hidden max-h-[90svh] sm:max-h-[85vh] flex flex-col">
           <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
             <div className="flex items-center justify-between">
               <div className="flex bg-muted rounded-xl p-1.5 border border-border">
@@ -203,6 +202,16 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">
                   {isUSD ? 'DÓLARES' : 'PESOS ARGENTINOS'} • MOVER CAPITAL
                 </p>
+
+                {/* Selector de Fecha */}
+                <div className="flex justify-center pt-2">
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="bg-muted px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground border border-border focus:border-primary focus:outline-none transition-all"
+                  />
+                </div>
               </div>
 
               <div className="relative">
@@ -274,13 +283,16 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                     <div className="flex items-center justify-between px-2">
                       <div className="flex items-center space-x-2">
                         <Users className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Asignar {type === 'income' ? 'Cliente' : 'Proveedor'}</span>
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                          Asignar Proveedor
+                        </span>
                       </div>
                       <button 
+                        type="button"
                         onClick={() => setIncludeContact(!includeContact)}
                         className={cn(
                           "w-10 h-5 rounded-full relative transition-all border",
-                          includeContact ? "bg-primary border-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.3)]" : "bg-muted border-border"
+                          includeContact ? "bg-primary border-primary/20" : "bg-muted border-border"
                         )}
                       >
                         <div className={cn(

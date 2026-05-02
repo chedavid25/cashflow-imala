@@ -3,7 +3,7 @@
 import React from "react";
 import { Modal } from "../ui/modal";
 import { Category } from "@/lib/services/category-service";
-import { Tag, TrendingUp, TrendingDown, Coffee, Fuel, ShoppingCart, Utensils, MoreHorizontal, Users, Briefcase, LucideIcon } from "lucide-react";
+import { Tag, TrendingUp, TrendingDown, Coffee, Fuel, ShoppingCart, Utensils, MoreHorizontal, Users, Briefcase, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CategorySelectionModalProps {

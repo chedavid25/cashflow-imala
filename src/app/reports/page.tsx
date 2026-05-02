@@ -61,7 +61,6 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   
-  // New States
   const [activeTab, setActiveTab] = useState<'dashboard' | 'detail'>('dashboard');
   const [viewType, setViewType] = useState<'income' | 'expense'>('income');
   const [timeFilter, setTimeFilter] = useState<'month' | 'quarter' | 'semester' | 'year' | 'all'>('month');
@@ -87,7 +86,6 @@ export default function ReportsPage() {
     fetchData();
   }, [user]);
 
-  // Process data for charts
   const getMonthlyData = () => {
     const months = Array.from({ length: 6 }).map((_, i) => subMonths(new Date(), i)).reverse();
     
@@ -115,20 +113,52 @@ export default function ReportsPage() {
   };
 
   const getCategoryData = () => {
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+
+    switch (timeFilter) {
+      case 'month': 
+        startDate = startOfMonth(referenceDate); 
+        endDate = endOfMonth(referenceDate);
+        break;
+      case 'quarter': 
+        startDate = startOfQuarter(referenceDate); 
+        endDate = endOfQuarter(referenceDate);
+        break;
+      case 'semester': 
+        startDate = subMonths(referenceDate, 6); 
+        endDate = referenceDate;
+        break;
+      case 'year': 
+        startDate = startOfYear(referenceDate); 
+        endDate = endOfYear(referenceDate);
+        break;
+      case 'all': 
+        startDate = null; 
+        endDate = null;
+        break;
+    }
+
     const categories: Record<string, number> = {};
-    const filtered = transactions.filter(t => t.currency === currency && t.type === 'expense' && t.status === 'completed');
+    const filtered = transactions.filter(t => 
+      t.currency === currency && 
+      t.type === 'expense' && 
+      t.status === 'completed' &&
+      (!startDate || (t.date.toDate() >= startDate && t.date.toDate() <= endDate!))
+    );
     
     filtered.forEach(t => {
       categories[t.category] = (categories[t.category] || 0) + t.amount;
     });
 
-    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+    return Object.entries(categories)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   };
 
   const monthlyData = getMonthlyData();
   const categoryData = getCategoryData();
 
-  // Filtered transitions for the table
   const getFilteredTransactions = () => {
     let startDate: Date | null = null;
     let endDate: Date | null = null;
@@ -240,29 +270,6 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex flex-col space-y-4 w-full sm:w-auto sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
-            {activeTab === 'detail' && (
-              <div className="flex bg-muted rounded-2xl p-1 border border-border h-12 w-full sm:w-auto">
-                <button
-                  onClick={() => setViewType('income')}
-                  className={cn(
-                    "flex-1 px-4 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest",
-                    viewType === 'income' ? "bg-emerald-500 text-white shadow-lg" : "text-muted-foreground"
-                  )}
-                >
-                  Ingresos
-                </button>
-                <button
-                  onClick={() => setViewType('expense')}
-                  className={cn(
-                    "flex-1 px-4 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest",
-                    viewType === 'expense' ? "bg-rose-500 text-white shadow-lg" : "text-muted-foreground"
-                  )}
-                >
-                  Gastos
-                </button>
-              </div>
-            )}
-            
             <div className="flex bg-muted rounded-2xl p-1 border border-border h-12 w-full sm:w-48">
               <button
                 onClick={() => setCurrency('ARS')}
@@ -286,9 +293,61 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 bg-muted/30 p-4 rounded-3xl border border-border/50">
+          <div className="flex bg-muted p-1 border border-border shadow-inner rounded-2xl w-fit overflow-x-auto max-w-full">
+            {(['month', 'quarter', 'semester', 'year', 'all'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => {
+                  setTimeFilter(f);
+                  setReferenceDate(new Date()); 
+                }}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  timeFilter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {f === 'month' ? 'Mes' : f === 'quarter' ? 'Trimestre' : f === 'semester' ? 'Semestre' : f === 'year' ? 'Año' : 'Acumulado'}
+              </button>
+            ))}
+          </div>
+
+          {timeFilter !== 'all' && (
+            <div className="flex items-center space-x-2 bg-card border border-border rounded-2xl p-1 shadow-sm">
+              <button 
+                onClick={() => handleNavigate('prev')}
+                className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-primary"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              <div className="px-4 text-center min-w-[120px]">
+                <p className="text-[10px] font-black uppercase tracking-tighter text-primary">Viendo Período</p>
+                <p className="text-xs font-bold capitalize">{getPeriodLabel()}</p>
+              </div>
+
+              <button 
+                onClick={() => handleNavigate('next')}
+                className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-primary"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <button 
+                onClick={() => setReferenceDate(new Date())}
+                className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-amber-500"
+                title="Hoy"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
         {activeTab === 'dashboard' ? (
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Main Bar Chart: Income vs Expense */}
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
               <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
@@ -306,27 +365,23 @@ export default function ReportsPage() {
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: 'currentColor', fontSize: 12, fontWeight: 'bold' }} 
-                      className="text-muted-foreground"
                       dy={10}
                     />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: 'currentColor', fontSize: 10 }}
-                      className="text-muted-foreground/60"
-                      tickFormatter={(v) => `$${v > 1000 ? (v/1000).toFixed(0) + 'k' : v}`}
+                      tickFormatter={(v) => `$${v > 1000 ? (v / 1000).toFixed(0) + 'k' : v}`}
                     />
                     <Tooltip 
-                      cursor={{ fill: 'currentColor', className: 'text-muted/30' }}
+                      cursor={{ fill: 'currentColor', opacity: 0.1 }}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))', 
                         borderRadius: '16px', 
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                         fontSize: '12px',
                         fontWeight: 'bold'
                       }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Bar dataKey="ingresos" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
                     <Bar dataKey="egresos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
@@ -335,87 +390,90 @@ export default function ReportsPage() {
               </div>
             </Card>
 
-            {/* Pie Chart: Expenses by Category */}
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
               <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
                   <CardTitle className="text-lg font-bold">Gastos por Categoría</CardTitle>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Total histórico</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
+                    {timeFilter === 'all' ? 'Total histórico' : `Periodo: ${getPeriodLabel()}`}
+                  </p>
                 </div>
                 <Filter className="h-5 w-5 text-amber-500" />
               </CardHeader>
-              <div className="h-[300px] w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))', 
-                        borderRadius: '16px', 
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="w-1/3 space-y-2">
-                  {categoryData.map((item, i) => (
-                    <div key={i} className="flex items-center space-x-2">
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                      <span className="text-[10px] font-black text-muted-foreground uppercase truncate w-20">{item.name}</span>
-                    </div>
-                  ))}
+              <div className="h-[300px] w-full flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0">
+                <div className="h-full w-full sm:w-2/3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))', 
+                          borderRadius: '16px', 
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full sm:w-1/3 space-y-2 overflow-y-auto max-h-full px-2">
+                  {categoryData.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground font-bold text-center">Sin datos</p>
+                  ) : (
+                    categoryData.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span className="text-[10px] font-black text-muted-foreground uppercase truncate">{item.name}</span>
+                        </div>
+                        <span className="text-[9px] font-bold shrink-0">${item.value.toLocaleString()}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </Card>
 
-            {/* Trends: Historical Balance Progression */}
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6 lg:col-span-2">
               <CardHeader className="px-0 pb-8 space-y-1">
-                <CardTitle className="text-lg font-bold">Evolución Trimestral</CardTitle>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Saldo acumulado al cierre de mes</p>
+                <CardTitle className="text-lg font-bold">Tendencia de Ingresos</CardTitle>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Evolución en los últimos 6 meses</p>
               </CardHeader>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-border" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
                     <XAxis 
                       dataKey="name" 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: 'currentColor', fontSize: 12, fontWeight: 'bold' }} 
-                      className="text-muted-foreground"
                       dy={10}
                     />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: 'currentColor', fontSize: 10 }}
-                      className="text-muted-foreground/60"
                     />
                     <Tooltip 
                        contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))', 
                         borderRadius: '16px', 
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                       }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Line 
                       type="monotone" 
@@ -425,6 +483,14 @@ export default function ReportsPage() {
                       dot={{ fill: '#10b981', r: 6, strokeWidth: 0 }}
                       activeDot={{ r: 8, stroke: 'white', strokeWidth: 2 }}
                     />
+                    <Line 
+                      type="monotone" 
+                      dataKey="egresos" 
+                      stroke="#ef4444" 
+                      strokeWidth={4} 
+                      dot={{ fill: '#ef4444', r: 6, strokeWidth: 0 }}
+                      activeDot={{ r: 8, stroke: 'white', strokeWidth: 2 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -432,57 +498,25 @@ export default function ReportsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex bg-muted p-1 border border-border shadow-inner rounded-2xl w-fit overflow-x-auto max-w-full">
-                {(['month', 'quarter', 'semester', 'year', 'all'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => {
-                      setTimeFilter(f);
-                      setReferenceDate(new Date()); // Reset to present when changing filter type
-                    }}
-                    className={cn(
-                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      timeFilter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {f === 'month' ? 'Mes' : f === 'quarter' ? 'Trimestre' : f === 'semester' ? 'Semestre' : f === 'year' ? 'Año' : 'Acumulado'}
-                  </button>
-                ))}
-              </div>
-
-              {timeFilter !== 'all' && (
-                <div className="flex items-center space-x-2 bg-card border border-border rounded-2xl p-1 shadow-sm">
-                  <button 
-                    onClick={() => handleNavigate('prev')}
-                    className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-primary"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  
-                  <div className="px-4 text-center min-w-[120px]">
-                    <p className="text-[10px] font-black uppercase tracking-tighter text-primary">Viendo Período</p>
-                    <p className="text-xs font-bold capitalize">{getPeriodLabel()}</p>
-                  </div>
-
-                  <button 
-                    onClick={() => handleNavigate('next')}
-                    className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-primary"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-
-                  <div className="w-px h-4 bg-border mx-1" />
-
-                  <button 
-                    onClick={() => setReferenceDate(new Date())}
-                    className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-amber-500"
-                    title="Volver a hoy"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
+            <div className="flex bg-muted rounded-2xl p-1 border border-border h-12 w-fit">
+              <button
+                onClick={() => setViewType('income')}
+                className={cn(
+                  "px-6 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest",
+                  viewType === 'income' ? "bg-emerald-500 text-white shadow-lg" : "text-muted-foreground"
+                )}
+              >
+                Ingresos
+              </button>
+              <button
+                onClick={() => setViewType('expense')}
+                className={cn(
+                  "px-6 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest",
+                  viewType === 'expense' ? "bg-rose-500 text-white shadow-lg" : "text-muted-foreground"
+                )}
+              >
+                Gastos
+              </button>
             </div>
 
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden">
@@ -492,7 +526,7 @@ export default function ReportsPage() {
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fecha</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detalle / Cliente</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detalle</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Categoría</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Monto</th>
                     </tr>
@@ -502,10 +536,9 @@ export default function ReportsPage() {
                       <tr key={t.id} className="hover:bg-muted/20 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-xs font-bold">{format(t.date.toDate(), "dd/MM/yyyy")}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase">{format(t.date.toDate(), "HH:mm")}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="text-sm font-black group-hover:text-primary transition-colors">{getClientName(t.clientId)}</p>
+                          <p className="text-sm font-black">{getClientName(t.clientId)}</p>
                         </td>
                         <td className="px-6 py-4">
                           <span className="px-3 py-1 rounded-full bg-muted text-[10px] font-black uppercase tracking-widest border border-border">
@@ -528,7 +561,7 @@ export default function ReportsPage() {
                 {tableTransactions.length === 0 && (
                   <div className="py-20 text-center space-y-3 opacity-30">
                     <Filter className="h-12 w-12 mx-auto" />
-                    <p className="text-xs font-black uppercase tracking-widest">No hay transacciones en este período</p>
+                    <p className="text-xs font-black uppercase tracking-widest">No hay datos</p>
                   </div>
                 )}
               </div>
