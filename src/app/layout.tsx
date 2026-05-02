@@ -18,6 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CashFlow Imalá | Gestión Inteligente",
   description: "CRM y Gestión de Cashflow avanzado para control manual y preciso de finanzas.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/favicon.ico",
+    apple: "/icons/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
