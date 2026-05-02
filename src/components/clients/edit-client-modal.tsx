@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { clientService, Client } from "@/lib/services/client-service";
 import { accountService, Account } from "@/lib/services/account-service";
 import { useAuth } from "@/context/AuthContext";
-import { User, Briefcase, FileText, Globe, DollarSign, Landmark } from "lucide-react";
+import { User, Briefcase, FileText, Globe, DollarSign, Landmark, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EditClientModalProps {
@@ -24,6 +24,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   const [name, setName] = useState("");
   const [razonSocial, setRazonSocial] = useState("");
   const [cuit, setCuit] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [billingType, setBillingType] = useState<'monthly_fee' | 'one_shot'>('monthly_fee');
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [budget, setBudget] = useState("");
@@ -39,6 +41,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   useEffect(() => {
     if (client && isOpen) {
       setName(client.name);
+      setEmail(client.email || "");
+      setPhone(client.phone || "");
       setRazonSocial(client.razonSocial || "");
       setCuit(client.cuit || "");
       setBillingType(client.billingType);
@@ -56,6 +60,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     try {
       await clientService.updateClient(client.id, {
         name,
+        email,
+        phone,
         razonSocial,
         cuit,
         billingType,
@@ -90,6 +96,36 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
               />
+            </div>
+          </div>
+
+          {/* Email y Teléfono */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <input 
+                  type="email"
+                  placeholder="ejemplo@mail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Teléfono</label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <input 
+                  type="tel"
+                  placeholder="+54 9..."
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
+                />
+              </div>
             </div>
           </div>
 

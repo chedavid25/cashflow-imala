@@ -13,6 +13,8 @@ export interface Client {
   id?: string;
   userId: string; // The user who owns this CRM entry
   name: string;
+  email?: string;
+  phone?: string;
   razonSocial: string;
   cuit: string;
   billingType: 'monthly_fee' | 'one_shot';
