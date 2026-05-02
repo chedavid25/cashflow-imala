@@ -40,5 +40,10 @@ export const accountService = {
     await updateDoc(accountRef, {
       balance: increment(amount)
     });
+  },
+
+  async updateAccount(accountId: string, data: Partial<Account>): Promise<void> {
+    const accountRef = doc(db, "accounts", accountId);
+    await updateDoc(accountRef, data);
   }
 };

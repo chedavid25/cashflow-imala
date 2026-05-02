@@ -18,7 +18,9 @@ import {
   TrendingDown
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { CreateAccountModal } from "@/components/accounts/create-account-modal";
+import { EditAccountModal } from "@/components/accounts/edit-account-modal";
 import { cn } from "@/lib/utils";
 
 export default function AccountsPage() {
@@ -26,6 +28,9 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const router = useRouter();
 
   const fetchAccounts = async () => {
     if (!user) return;
@@ -120,13 +125,27 @@ export default function AccountsPage() {
               const colorClasses = getColor(account.type);
               
               return (
-                <motion.div key={account.id} variants={item}>
+                <motion.div 
+                  key={account.id} 
+                  variants={item}
+                  onClick={() => router.push(`/accounts/${account.id}`)}
+                  className="cursor-pointer"
+                >
                   <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm group hover:shadow-xl hover:bg-card transition-all duration-300">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <div className={cn("p-2.5 rounded-2xl", colorClasses)}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <Button variant="ghost" size="icon" className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAccount(account);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
                         <MoreVertical className="h-5 w-5 text-muted-foreground" />
                       </Button>
                     </CardHeader>
@@ -179,6 +198,13 @@ export default function AccountsPage() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchAccounts}
+      />
+
+      <EditAccountModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={fetchAccounts}
+        account={selectedAccount}
       />
     </MainLayout>
   );
