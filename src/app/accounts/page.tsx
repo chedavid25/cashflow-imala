@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { accountService, Account } from "@/lib/services/account-service";
+import { transactionService, Transaction } from "@/lib/services/transaction-service";
 import { useAuth } from "@/context/AuthContext";
+import { startOfMonth, endOfMonth } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -30,14 +32,73 @@ export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [variations, setVariations] = useState<Record<string, number>>({});
   const router = useRouter();
 
   const fetchAccounts = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await accountService.getAccounts(user.uid);
-      setAccounts(data);
+      const [accountsData, transactionsData] = await Promise.all([
+        accountService.getAccounts(user.uid),
+        transactionService.getTransactions(user.uid)
+      ]);
+      
+      setAccounts(accountsData);
+
+      // Calculate variations
+      const now = new Date();
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+      
+      const newVariations: Record<string, number> = {};
+      
+      accountsData.forEach(acc => {
+        if (!acc.id) return;
+        
+        const monthTransactions = transactionsData.filter(t => {
+          const tDate = t.date.toDate();
+          return (t.accountId === acc.id || t.toAccountId === acc.id) && tDate >= start && tDate <= end && t.status === 'completed';
+        });
+
+        let netChange = 0;
+        monthTransactions.forEach(t => {
+          if (t.accountId === acc.id) {
+            // Money leaving this account
+            netChange -= t.amount;
+          } else if (t.toAccountId === acc.id) {
+            // Money entering this account (transfer)
+            netChange += (t as any).toAmount || t.amount;
+          }
+          // Note: In my service, normal income has accountId, and normal expense has accountId.
+          // If type is 'income', it's actually money ENTERING. 
+          // Wait, let's check transactionService.createTransaction logic.
+        });
+
+        // Re-checking logic based on transaction-service.ts:
+        // createTransaction: if type === 'income', amountModifier = amount. If type === 'expense', amountModifier = -amount.
+        // So:
+        let correctedNetChange = 0;
+        monthTransactions.forEach(t => {
+          if (t.type === 'transfer') {
+            if (t.accountId === acc.id) correctedNetChange -= t.amount;
+            if (t.toAccountId === acc.id) correctedNetChange += (t as any).toAmount || t.amount;
+          } else {
+            // Income adds, Expense/Investment subtracts
+            if (t.type === 'income') correctedNetChange += t.amount;
+            else correctedNetChange -= t.amount;
+          }
+        });
+
+        const initialBalance = acc.balance - correctedNetChange;
+        if (initialBalance <= 0) {
+          newVariations[acc.id] = initialBalance === 0 && acc.balance > 0 ? 100 : 0;
+        } else {
+          newVariations[acc.id] = (correctedNetChange / initialBalance) * 100;
+        }
+      });
+      
+      setVariations(newVariations);
     } catch (error) {
       console.error("Error fetching accounts:", error);
     } finally {
@@ -156,12 +217,22 @@ export default function AccountsPage() {
                       </div>
                       
                       <div className="flex items-center space-x-4 pt-2 border-t border-border">
-                        <div className="flex items-center text-[10px] font-bold text-emerald-500">
-                          <TrendingUp className="mr-1 h-3 w-3" />
-                          +12% este mes
-                        </div>
+                        {account.id && variations[account.id] !== undefined && (
+                          <div className={cn(
+                            "flex items-center text-[10px] font-bold",
+                            variations[account.id] >= 0 ? "text-emerald-500" : "text-rose-500"
+                          )}>
+                            {variations[account.id] >= 0 ? (
+                              <TrendingUp className="mr-1 h-3 w-3" />
+                            ) : (
+                              <TrendingDown className="mr-1 h-3 w-3" />
+                            )}
+                            {variations[account.id] > 0 ? "+" : ""}{variations[account.id].toFixed(1)}% este mes
+                          </div>
+                        )}
                         <div className="text-[10px] font-bold text-muted-foreground uppercase opacity-40">
-                          {account.currency} • {account.type}
+                          {account.currency} • {account.type === 'debit_card' ? 'T. Débito' : 
+                                               account.type === 'credit_card' ? 'T. Crédito' : 'Efectivo'}
                         </div>
                       </div>
                     </CardContent>
