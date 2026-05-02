@@ -178,13 +178,13 @@ export default function DashboardPage() {
           </div>
           
           <div className="space-y-6">
-            <Card className="p-6 space-y-4 border-none shadow-md bg-gradient-to-br from-primary/10 to-primary/5">
+            <Card className="p-4 sm:p-6 space-y-4 border-none shadow-md bg-gradient-to-br from-primary/10 to-primary/5">
               <div className="flex items-center justify-between">
-                <h4 className="font-bold">Acciones Rápidas</h4>
+                <h4 className="font-bold text-sm sm:text-base">Acciones Rápidas</h4>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 text-[10px]"
+                  className="h-8 text-[9px] sm:text-[10px] px-2"
                   onClick={async () => {
                     if (!user) return;
                     const t = await transactionService.getTransactions(user.uid);
@@ -194,30 +194,30 @@ export default function DashboardPage() {
                   Exportar CSV
                 </Button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <Button 
                   variant="outline" 
-                  className="rounded-xl h-20 flex-col space-y-2 bg-background/50 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all"
+                  className="rounded-xl h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 bg-background/50 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all px-1"
                   onClick={() => handleQuickAction('income')}
                 >
-                  <ArrowUpRight className="h-5 w-5 text-emerald-500" />
-                  <span className="text-[10px]">Nuevo Ingreso</span>
+                  <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
+                  <span className="text-[9px] sm:text-[10px] text-center leading-tight">Nuevo Ingreso</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="rounded-xl h-20 flex-col space-y-2 bg-background/50 hover:bg-rose-500/10 hover:border-rose-500/50 transition-all"
+                  className="rounded-xl h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 bg-background/50 hover:bg-rose-500/10 hover:border-rose-500/50 transition-all px-1"
                   onClick={() => handleQuickAction('expense')}
                 >
-                  <ArrowDownRight className="h-5 w-5 text-rose-500" />
-                  <span className="text-[10px]">Nuevo Gasto</span>
+                  <ArrowDownRight className="h-4 w-4 sm:h-5 sm:w-5 text-rose-500" />
+                  <span className="text-[9px] sm:text-[10px] text-center leading-tight">Nuevo Gasto</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="rounded-xl h-20 flex-col space-y-2 bg-background/50 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all col-span-2"
+                  className="rounded-xl h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 bg-background/50 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all col-span-2 px-1"
                   onClick={() => setIsTransferModalOpen(true)}
                 >
-                  <ArrowRightLeft className="h-5 w-5 text-blue-500" />
-                  <span className="text-[10px]">Transferir entre Cuentas</span>
+                  <ArrowRightLeft className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                  <span className="text-[9px] sm:text-[10px] text-center leading-tight">Transferir entre Cuentas</span>
                 </Button>
               </div>
             </Card>

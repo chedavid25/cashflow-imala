@@ -128,44 +128,46 @@ export default function BillingPage() {
             <p className="text-muted-foreground text-sm font-medium">Control cíclico de ingresos y cuentas por cobrar.</p>
           </div>
           
-          <div className="flex bg-muted p-1 border border-border shadow-inner w-full md:w-auto overflow-x-auto rounded-3xl no-scrollbar">
-            <button 
-              onClick={() => { setActiveTab('emit'); setSearch(""); }}
-              className={cn(
-                "flex-1 min-w-[120px] md:px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap",
-                activeTab === 'emit' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              CONTROL DE CICLO
-            </button>
-            <button 
-              onClick={() => { setActiveTab('collect'); setSearch(""); }}
-              className={cn(
-                "flex-1 min-w-[120px] md:px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all relative whitespace-nowrap",
-                activeTab === 'collect' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              COBRANZAS DEL MES
-              {currentMonthPending.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[8px] flex items-center justify-center text-primary-foreground ring-2 ring-muted font-black">
-                  {currentMonthPending.length}
-                </span>
-              )}
-            </button>
-            <button 
-              onClick={() => { setActiveTab('overdue'); setSearch(""); }}
-              className={cn(
-                "flex-1 min-w-[120px] md:px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all relative whitespace-nowrap",
-                activeTab === 'overdue' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              ATRASADOS
-              {overduePending.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-[8px] flex items-center justify-center text-white ring-2 ring-muted font-black animate-pulse">
-                  {overduePending.length}
-                </span>
-              )}
-            </button>
+          <div className="bg-muted p-1 border border-border shadow-inner w-full md:w-auto rounded-3xl overflow-hidden">
+            <div className="flex md:grid md:grid-cols-3 gap-1 overflow-x-auto no-scrollbar">
+              <button 
+                onClick={() => { setActiveTab('emit'); setSearch(""); }}
+                className={cn(
+                  "flex-1 md:flex-none min-w-[100px] sm:min-w-[120px] px-3 sm:px-6 py-2.5 rounded-2xl text-[9px] sm:text-[10px] font-black tracking-widest transition-all whitespace-nowrap",
+                  activeTab === 'emit' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+              >
+                CONTROL DE CICLO
+              </button>
+              <button 
+                onClick={() => { setActiveTab('collect'); setSearch(""); }}
+                className={cn(
+                  "flex-1 md:flex-none min-w-[100px] sm:min-w-[120px] px-3 sm:px-6 py-2.5 rounded-2xl text-[9px] sm:text-[10px] font-black tracking-widest transition-all relative whitespace-nowrap",
+                  activeTab === 'collect' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+              >
+                COBRANZAS DEL MES
+                {currentMonthPending.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[8px] flex items-center justify-center text-primary-foreground ring-2 ring-muted font-black">
+                    {currentMonthPending.length}
+                  </span>
+                )}
+              </button>
+              <button 
+                onClick={() => { setActiveTab('overdue'); setSearch(""); }}
+                className={cn(
+                  "flex-1 md:flex-none min-w-[100px] sm:min-w-[120px] px-3 sm:px-6 py-2.5 rounded-2xl text-[9px] sm:text-[10px] font-black tracking-widest transition-all relative whitespace-nowrap",
+                  activeTab === 'overdue' ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+              >
+                ATRASADOS
+                {overduePending.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-[8px] flex items-center justify-center text-white ring-2 ring-muted font-black animate-pulse">
+                    {overduePending.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

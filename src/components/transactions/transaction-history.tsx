@@ -122,25 +122,25 @@ export function TransactionHistory({ transactions, loading, onDelete }: Transact
             currentTransactions.map((t) => (
               <div 
                 key={t.id} 
-                className="flex items-center justify-between p-3 rounded-2xl hover:bg-muted/50 transition-colors group"
+                className="flex items-center justify-between p-2 sm:p-3 rounded-2xl hover:bg-muted/50 transition-colors group"
               >
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                   <div className={cn(
-                    "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
+                    "h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
                     getBgColor(t.type)
                   )}>
                     {getIcon(t.type)}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold truncate leading-none mb-1">{t.category}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                      {format(t.date.toDate(), "d 'de' MMMM", { locale: es })}
+                    <span className="text-xs sm:text-sm font-bold truncate leading-none mb-1">{t.category}</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                      {format(t.date.toDate(), "d 'de' MMM", { locale: es })}
                     </span>
                   </div>
                 </div>
-                <div className="text-right flex flex-col items-end shrink-0 min-w-[80px]">
+                <div className="text-right flex flex-col items-end shrink-0 ml-2">
                   <span className={cn(
-                    "text-sm font-black tracking-tight",
+                    "text-xs sm:text-sm font-black tracking-tight whitespace-nowrap",
                     t.type === 'income' ? "text-emerald-500" : 
                     t.type === 'expense' ? "text-rose-500" : "text-foreground"
                   )}>
@@ -150,7 +150,7 @@ export function TransactionHistory({ transactions, loading, onDelete }: Transact
                   
                   <div className="flex items-center space-x-2 mt-1">
                     {t.type === 'transfer' && (
-                      <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
+                      <span className="text-[8px] font-bold text-blue-500 uppercase tracking-widest hidden sm:inline">
                         Transferencia
                       </span>
                     )}
@@ -171,7 +171,7 @@ export function TransactionHistory({ transactions, loading, onDelete }: Transact
                         }
                       }}
                       disabled={deletingId === t.id}
-                      className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                      className="p-1 sm:p-1.5 rounded-lg text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
                     >
                       {deletingId === t.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
