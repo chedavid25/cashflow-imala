@@ -131,8 +131,8 @@ export function TransactionHistory({ transactions, loading, onDelete }: Transact
                   )}>
                     {getIcon(t.type)}
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs sm:text-sm font-bold truncate leading-none mb-1">{t.category}</span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-bold leading-tight mb-0.5 text-foreground/90">{t.category}</span>
                     <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
                       {format(t.date.toDate(), "d 'de' MMM", { locale: es })}
                     </span>

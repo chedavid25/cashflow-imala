@@ -218,7 +218,7 @@ export function QuickRegister({ isOpen, onClose, onSuccess, initialType = 'expen
                 <div className="flex items-center justify-between mb-3 px-1">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Categoría</span>
                 </div>
-                <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="flex flex-wrap gap-2 max-h-[160px] sm:max-h-[120px] overflow-y-auto pr-1 custom-scrollbar">
                   {categories
                     .filter(c => c.type === type)
                     .map((item) => {
