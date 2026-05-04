@@ -112,7 +112,7 @@ export default function ReportsPage() {
     });
   };
 
-  const getCategoryData = () => {
+  const getCategoryData = (type: 'income' | 'expense') => {
     let startDate: Date | null = null;
     let endDate: Date | null = null;
 
@@ -142,13 +142,14 @@ export default function ReportsPage() {
     const categories: Record<string, number> = {};
     const filtered = transactions.filter(t => 
       t.currency === currency && 
-      t.type === 'expense' && 
+      t.type === type && 
       t.status === 'completed' &&
       (!startDate || (t.date.toDate() >= startDate && t.date.toDate() <= endDate!))
     );
     
     filtered.forEach(t => {
-      categories[t.category] = (categories[t.category] || 0) + t.amount;
+      const catName = t.category || (type === 'income' ? 'Servicios' : 'Otros');
+      categories[catName] = (categories[catName] || 0) + t.amount;
     });
 
     return Object.entries(categories)
@@ -157,7 +158,8 @@ export default function ReportsPage() {
   };
 
   const monthlyData = getMonthlyData();
-  const categoryData = getCategoryData();
+  const incomeCategoryData = getCategoryData('income');
+  const expenseCategoryData = getCategoryData('expense');
 
   const getFilteredTransactions = () => {
     let startDate: Date | null = null;
@@ -347,8 +349,9 @@ export default function ReportsPage() {
         </div>
 
         {activeTab === 'dashboard' ? (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            {/* Fila 1: Comparativa General - Full Width */}
+            <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6 lg:col-span-2">
               <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
                   <CardTitle className="text-lg font-bold">Ingresos vs Egresos</CardTitle>
@@ -356,7 +359,7 @@ export default function ReportsPage() {
                 </div>
                 <BarChart3 className="h-5 w-5 text-primary" />
               </CardHeader>
-              <div className="h-[300px] w-full">
+              <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-border" />
@@ -383,74 +386,18 @@ export default function ReportsPage() {
                         fontWeight: 'bold'
                       }}
                     />
-                    <Bar dataKey="ingresos" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
-                    <Bar dataKey="egresos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+                    <Bar dataKey="ingresos" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey="egresos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
 
-            <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
-              <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg font-bold">Gastos por Categoría</CardTitle>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
-                    {timeFilter === 'all' ? 'Total histórico' : `Periodo: ${getPeriodLabel()}`}
-                  </p>
-                </div>
-                <Filter className="h-5 w-5 text-amber-500" />
-              </CardHeader>
-              <div className="h-[300px] w-full flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0">
-                <div className="h-full w-full sm:w-2/3">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))', 
-                          borderRadius: '16px', 
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="w-full sm:w-1/3 space-y-2 overflow-y-auto max-h-full px-2">
-                  {categoryData.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground font-bold text-center">Sin datos</p>
-                  ) : (
-                    categoryData.map((item, i) => (
-                      <div key={i} className="flex items-center justify-between space-x-2">
-                        <div className="flex items-center space-x-2 min-w-0">
-                          <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                          <span className="text-[10px] font-black text-muted-foreground uppercase truncate">{item.name}</span>
-                        </div>
-                        <span className="text-[9px] font-bold shrink-0">${item.value.toLocaleString()}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </Card>
-
+            {/* Fila 2: Tendencia de Ingresos - Full Width */}
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6 lg:col-span-2">
               <CardHeader className="px-0 pb-8 space-y-1">
-                <CardTitle className="text-lg font-bold">Tendencia de Ingresos</CardTitle>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Evolución en los últimos 6 meses</p>
+                <CardTitle className="text-lg font-bold">Tendencia de Flujo</CardTitle>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Evolución mensual</p>
               </CardHeader>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -493,6 +440,119 @@ export default function ReportsPage() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Fila 3: Tortas de Categorías */}
+            {/* Torta Ingresos */}
+            <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
+              <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-bold">Ingresos por Categoría</CardTitle>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Distribución de entradas</p>
+                </div>
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+              </CardHeader>
+              <div className="h-[250px] w-full flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0">
+                <div className="h-full w-full sm:w-1/2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={incomeCategoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {incomeCategoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))', 
+                          borderRadius: '16px', 
+                          fontSize: '10px',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full px-2">
+                  {incomeCategoryData.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground font-bold text-center">Sin datos</p>
+                  ) : (
+                    incomeCategoryData.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span className="text-[10px] font-black text-muted-foreground uppercase truncate">{item.name}</span>
+                        </div>
+                        <span className="text-[9px] font-bold shrink-0">${item.value.toLocaleString()}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Torta Egresos */}
+            <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6">
+              <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-bold">Gastos por Categoría</CardTitle>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Distribución de salidas</p>
+                </div>
+                <TrendingDown className="h-5 w-5 text-rose-500" />
+              </CardHeader>
+              <div className="h-[250px] w-full flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0">
+                <div className="h-full w-full sm:w-1/2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expenseCategoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {expenseCategoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))', 
+                          borderRadius: '16px', 
+                          fontSize: '10px',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full px-2">
+                  {expenseCategoryData.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground font-bold text-center">Sin datos</p>
+                  ) : (
+                    expenseCategoryData.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between space-x-2">
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span className="text-[10px] font-black text-muted-foreground uppercase truncate">{item.name}</span>
+                        </div>
+                        <span className="text-[9px] font-bold shrink-0">${item.value.toLocaleString()}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </Card>
           </div>
