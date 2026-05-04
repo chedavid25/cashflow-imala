@@ -31,6 +31,7 @@ export interface Transaction {
   paidBy: 'David' | 'Lucre' | 'Shared';
   accountId: string;
   toAccountId?: string; // Para transferencias entre cuentas
+  feeId?: string;
 }
 
 export const transactionService = {
@@ -99,6 +100,41 @@ export const transactionService = {
         accountId: finalData.accountId,
         date: Timestamp.now() 
       });
+
+      // CLEANUP: If it's a one-shot fee, remove it from the client
+      if (tData.clientId) {
+        const clientRef = doc(db, "clients", tData.clientId);
+        const cSnap = await txn.get(clientRef);
+        if (cSnap.exists()) {
+          const cData = cSnap.data();
+          
+          // Case 1: Fee is in the fees array
+          if (tData.feeId && cData.fees) {
+            const feeIndex = cData.fees.findIndex((f: any) => f.id === tData.feeId);
+            if (feeIndex !== -1 && cData.fees[feeIndex].billingType === 'one_shot') {
+              const updatedFees = [...cData.fees];
+              updatedFees.splice(feeIndex, 1);
+              txn.update(clientRef, { fees: updatedFees });
+            }
+          }
+          // Case 2: Legacy fee (no fees array, using budget/billingType fields)
+          else if (!tData.feeId && cData.billingType === 'one_shot') {
+            txn.update(clientRef, {
+              budget: 0,
+              billingType: null,
+              currency: null
+            });
+          }
+          // Case 3: Legacy fee identified as 'legacy'
+          else if (tData.feeId === 'legacy' && cData.billingType === 'one_shot') {
+            txn.update(clientRef, {
+              budget: 0,
+              billingType: null,
+              currency: null
+            });
+          }
+        }
+      }
 
       // Update linked asset if it's an investment
       if (tData.assetId && tData.type === 'investment') {

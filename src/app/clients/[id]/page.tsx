@@ -147,12 +147,25 @@ export default function ClientDetailPage() {
           </Card>
           <Card className="border border-border bg-card shadow-md">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Billing Fee</CardTitle>
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Servicios Contratados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-foreground">
-                {formatCurrency(client?.budget || 0, client?.currency || 'ARS')}
-                <span className="text-xs text-muted-foreground ml-2 font-bold">/ mes</span>
+              <div className="space-y-3">
+                {client?.fees && client.fees.length > 0 ? (
+                  client.fees.map(fee => (
+                    <div key={fee.id} className="flex flex-col border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                      <span className="text-base font-black text-foreground">
+                        {formatCurrency(fee.amount, fee.currency)}
+                      </span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{fee.serviceName}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-2xl font-black text-foreground">
+                    {formatCurrency(client?.budget || 0, client?.currency || 'ARS')}
+                    <span className="text-xs text-muted-foreground ml-2 font-bold">/ mes</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

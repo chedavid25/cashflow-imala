@@ -9,6 +9,7 @@ import { Landmark, Calendar, RefreshCw, DollarSign, Calculator, CheckCircle2 } f
 import { cn } from "@/lib/utils";
 import { Timestamp } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ConfirmPaymentModalProps {
   isOpen: boolean;
@@ -220,6 +221,3 @@ export function ConfirmPaymentModal({ isOpen, onClose, onSuccess, transaction }:
     </Modal>
   );
 }
-
-// Helper to keep imports clean
-import { AnimatePresence, motion } from "framer-motion";

@@ -9,6 +9,15 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+export interface ClientFee {
+  id: string;
+  serviceName: string;
+  amount: number;
+  currency: 'ARS' | 'USD';
+  billingType: 'monthly_fee' | 'one_shot';
+  defaultTargetAccount?: string;
+}
+
 export interface Client {
   id?: string;
   userId: string; // The user who owns this CRM entry
@@ -17,12 +26,13 @@ export interface Client {
   phone?: string;
   razonSocial: string;
   cuit: string;
-  billingType: 'monthly_fee' | 'one_shot';
-  budget: number;
-  currency: 'ARS' | 'USD';
+  billingType?: 'monthly_fee' | 'one_shot';
+  budget?: number;
+  currency?: 'ARS' | 'USD';
   billTo: 'David' | 'Lucre';
   defaultTargetAccount?: string;
   status?: 'active' | 'archived';
+  fees?: ClientFee[];
 }
 
 export const clientService = {

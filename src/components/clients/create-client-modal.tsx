@@ -6,9 +6,10 @@ import { Button } from "../ui/button";
 import { clientService, Client } from "@/lib/services/client-service";
 import { accountService, Account } from "@/lib/services/account-service";
 import { useAuth } from "@/context/AuthContext";
-import { User, Briefcase, FileText, Globe, DollarSign, Wallet, Landmark, Mail, Phone } from "lucide-react";
+import { User, Briefcase, FileText, Globe, DollarSign, Wallet, Landmark, Mail, Phone, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { ClientFee } from "@/lib/services/client-service";
 
 interface CreateClientModalProps {
   isOpen: boolean;
@@ -26,11 +27,12 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
   const [cuit, setCuit] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [billingType, setBillingType] = useState<'monthly_fee' | 'one_shot'>('monthly_fee');
-  const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
-  const [budget, setBudget] = useState("");
-  const [defaultTargetAccount, setDefaultTargetAccount] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
+
+  // Fees state
+  const [fees, setFees] = useState<Omit<ClientFee, 'id'>[]>([
+    { serviceName: "Servicio Mensual", amount: 0, currency: 'ARS', billingType: 'monthly_fee' }
+  ]);
 
   useEffect(() => {
     if (user && isOpen) {
@@ -38,12 +40,33 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
     }
   }, [user, isOpen]);
 
+  const addFee = () => {
+    setFees([...fees, { serviceName: "", amount: 0, currency: 'ARS', billingType: 'monthly_fee' }]);
+  };
+
+  const removeFee = (index: number) => {
+    if (fees.length <= 1) return;
+    setFees(fees.filter((_, i) => i !== index));
+  };
+
+  const updateFee = (index: number, data: Partial<Omit<ClientFee, 'id'>>) => {
+    const newFees = [...fees];
+    newFees[index] = { ...newFees[index], ...data };
+    setFees(newFees);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !name) return;
 
     setLoading(true);
     try {
+      // Generate IDs for fees
+      const feesWithIds: ClientFee[] = fees.map(f => ({
+        ...f,
+        id: Math.random().toString(36).substring(2, 11)
+      }));
+
       await clientService.createClient({
         userId: user.uid,
         name,
@@ -51,11 +74,13 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
         phone,
         razonSocial,
         cuit,
-        billingType,
-        currency,
-        budget: Number(budget) || 0,
         billTo: 'David', 
-        defaultTargetAccount: defaultTargetAccount || ""
+        fees: feesWithIds,
+        // Legacy fields for backward compatibility
+        budget: feesWithIds[0]?.amount || 0,
+        currency: feesWithIds[0]?.currency || 'ARS',
+        billingType: feesWithIds[0]?.billingType || 'monthly_fee',
+        defaultTargetAccount: feesWithIds[0]?.defaultTargetAccount || ""
       });
       
       // Reset form
@@ -64,7 +89,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
       setPhone("");
       setRazonSocial("");
       setCuit("");
-      setBudget("");
+      setFees([{ serviceName: "Servicio Mensual", amount: 0, currency: 'ARS', billingType: 'monthly_fee' }]);
       
       onSuccess();
       onClose();
@@ -152,99 +177,119 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Tipo de Facturación</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
+          <div className="border-t border-border pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <label className="text-xs font-black text-primary uppercase tracking-widest">Servicios / Abonos</label>
+              <button 
                 type="button"
-                onClick={() => setBillingType('monthly_fee')}
-                className={cn(
-                  "h-14 rounded-2xl border text-sm font-bold transition-all",
-                  billingType === 'monthly_fee' 
-                    ? "bg-primary/10 border-primary text-foreground" 
-                    : "bg-muted border-border text-muted-foreground"
-                )}
+                onClick={addFee}
+                className="flex items-center space-x-1 text-[10px] font-black bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-all"
               >
-                Abono Mensual
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingType('one_shot')}
-                className={cn(
-                  "h-14 rounded-2xl border text-sm font-bold transition-all",
-                  billingType === 'one_shot' 
-                    ? "bg-primary/10 border-primary text-foreground" 
-                    : "bg-muted border-border text-muted-foreground"
-                )}
-              >
-                Proyecto Único
+                <Plus className="h-3 w-3" />
+                <span>AGREGAR SERVICIO</span>
               </button>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Moneda</label>
-              <div className="flex bg-muted rounded-2xl p-1 border border-border h-14 items-center">
-                <button
-                  type="button"
-                  onClick={() => setCurrency('ARS')}
-                  className={cn(
-                    "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'ARS' ? "bg-accent text-foreground" : "text-muted-foreground/50"
+            <div className="space-y-6">
+              {fees.map((fee, index) => (
+                <div key={index} className="bg-muted/30 p-4 rounded-3xl border border-border relative space-y-4">
+                  {fees.length > 1 && (
+                    <button 
+                      type="button"
+                      onClick={() => removeFee(index)}
+                      className="absolute -top-2 -right-2 h-6 w-6 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-all shadow-lg"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   )}
-                >
-                  ARS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency('USD')}
-                  className={cn(
-                    "flex-1 h-full rounded-xl text-xs font-black transition-all",
-                    currency === 'USD' ? "bg-accent text-foreground" : "text-muted-foreground/50"
-                  )}
-                >
-                  USD
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Presupuesto / Fee</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
-                <input 
-                  type="number"
-                  placeholder="0.00"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  className="w-full bg-muted rounded-2xl h-14 pl-8 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
-                />
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Cuenta de Cobro Predeterminada</label>
-            <div className="relative">
-              <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
-              <select
-                value={defaultTargetAccount}
-                onChange={(e) => setDefaultTargetAccount(e.target.value)}
-                className="w-full bg-muted rounded-2xl h-14 pl-12 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all appearance-none text-foreground"
-              >
-                <option value="">Seleccionar cuenta...</option>
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
-                ))}
-              </select>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Descripción del Servicio</label>
+                    <input 
+                      type="text"
+                      placeholder="Ej: Mantenimiento Web, Marketing..."
+                      value={fee.serviceName}
+                      onChange={(e) => updateFee(index, { serviceName: e.target.value })}
+                      className="w-full bg-muted rounded-2xl h-12 px-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Tipo</label>
+                      <select
+                        value={fee.billingType}
+                        onChange={(e) => updateFee(index, { billingType: e.target.value as any })}
+                        className="w-full bg-muted rounded-2xl h-12 px-4 border border-border focus:border-primary/50 focus:outline-none text-xs transition-all appearance-none"
+                      >
+                        <option value="monthly_fee">Abono Mensual</option>
+                        <option value="one_shot">Proyecto Único</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Moneda</label>
+                      <div className="flex bg-muted rounded-2xl p-1 border border-border h-12 items-center">
+                        <button
+                          type="button"
+                          onClick={() => updateFee(index, { currency: 'ARS' })}
+                          className={cn(
+                            "flex-1 h-full rounded-xl text-[10px] font-black transition-all",
+                            fee.currency === 'ARS' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground/50"
+                          )}
+                        >
+                          ARS
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateFee(index, { currency: 'USD' })}
+                          className={cn(
+                            "flex-1 h-full rounded-xl text-[10px] font-black transition-all",
+                            fee.currency === 'USD' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground/50"
+                          )}
+                        >
+                          USD
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Monto / Fee</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">$</span>
+                        <input 
+                          type="number"
+                          placeholder="0.00"
+                          value={fee.amount || ""}
+                          onChange={(e) => updateFee(index, { amount: Number(e.target.value) })}
+                          className="w-full bg-muted rounded-2xl h-12 pl-8 pr-4 border border-border focus:border-primary/50 focus:outline-none text-sm transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Cuenta Destino</label>
+                      <select
+                        value={fee.defaultTargetAccount || ""}
+                        onChange={(e) => updateFee(index, { defaultTargetAccount: e.target.value })}
+                        className="w-full bg-muted rounded-2xl h-12 px-4 border border-border focus:border-primary/50 focus:outline-none text-xs transition-all appearance-none"
+                      >
+                        <option value="">Por defecto...</option>
+                        {accounts.map(acc => (
+                          <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-[10px] text-muted-foreground ml-1">Esta cuenta se usará por defecto al facturar abonos.</p>
           </div>
         </div>
 
         <Button 
           type="submit"
-          disabled={loading || !name}
+          disabled={loading || !name || fees.some(f => !f.serviceName || !f.amount)}
           className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
         >
           {loading ? "Registrando..." : "Crear Cliente"}

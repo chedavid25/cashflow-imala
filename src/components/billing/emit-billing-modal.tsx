@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Transaction, transactionService } from "@/lib/services/transaction-service";
 import { accountService, Account } from "@/lib/services/account-service";
-import { Client } from "@/lib/services/client-service";
+import { Client, ClientFee } from "@/lib/services/client-service";
 import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { Landmark, ReceiptText, DollarSign, CheckCircle2, RefreshCw, Calculator, Calendar } from "lucide-react";
@@ -17,9 +17,10 @@ interface EmitBillingModalProps {
   onClose: () => void;
   onSuccess: () => void;
   client: Client | null;
+  fee?: ClientFee | null;
 }
 
-export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBillingModalProps) {
+export function EmitBillingModal({ isOpen, onClose, onSuccess, client, fee }: EmitBillingModalProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -45,15 +46,20 @@ export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBil
 
   useEffect(() => {
     if (client && isOpen) {
-      setAmount(client.budget);
-      setCurrency(client.currency);
-      setCurrencyReceived(client.currency);
-      setAmountReceived(client.budget);
-      setAccountId(client.defaultTargetAccount || "");
+      // Use provided fee or fallback to client defaults
+      const initialAmount = fee ? fee.amount : (client.budget || 0);
+      const initialCurrency = fee ? fee.currency : (client.currency || 'ARS');
+      
+      setAmount(initialAmount);
+      setCurrency(initialCurrency);
+      setCurrencyReceived(initialCurrency);
+      setAmountReceived(initialAmount);
+      setAccountId(fee?.defaultTargetAccount || client.defaultTargetAccount || "");
+      setCategory(fee ? `Honorarios: ${fee.serviceName}` : "Honorarios");
       setIsCurrencyChange(false);
       setExchangeRate("");
     }
-  }, [client, isOpen]);
+  }, [client, fee, isOpen]);
 
   // Logic to calculate amount based on exchange rate
   useEffect(() => {
@@ -79,13 +85,14 @@ export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBil
       const transactionData: any = {
         userId: user.uid,
         clientId: client.id,
+        feeId: fee?.id, // Link to specific fee if provided
         type: 'income',
         category: category,
         amount: isCurrencyChange ? amountReceived : amount,
         currency: isCurrencyChange ? currencyReceived : currency,
         status: 'pending',
         date: Timestamp.now(),
-        isRecurring: client.billingType === 'monthly_fee',
+        isRecurring: (fee ? fee.billingType : client.billingType) === 'monthly_fee',
         paidBy: 'David',
         accountId: accountId,
       };
@@ -116,10 +123,10 @@ export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBil
           <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <ReceiptText className="h-5 w-5" />
           </div>
-          <div>
-            <h3 className="font-bold text-sm tracking-tight">{client.name}</h3>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-              {client.billingType === 'monthly_fee' ? 'Abono Mensual' : 'Proyecto Único'}
+          <div className="overflow-hidden">
+            <h3 className="font-bold text-sm tracking-tight truncate">{client.name}</h3>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+              {fee ? fee.serviceName : (client.billingType === 'monthly_fee' ? 'Abono Mensual' : 'Proyecto Único')}
             </p>
           </div>
         </div>

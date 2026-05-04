@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { clientService, Client } from "@/lib/services/client-service";
+import { clientService, Client, ClientFee } from "@/lib/services/client-service";
 import { transactionService, Transaction } from "@/lib/services/transaction-service";
 import { accountService, Account } from "@/lib/services/account-service";
 import { useAuth } from "@/context/AuthContext";
@@ -36,11 +36,11 @@ export default function BillingPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [processingId, setProcessingId] = useState<string | null>(null);
   
   // Tab and Modal states
   const [activeTab, setActiveTab] = useState<'emit' | 'collect' | 'overdue'>('emit');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedFee, setSelectedFee] = useState<ClientFee | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isEmitModalOpen, setIsEmitModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -74,13 +74,18 @@ export default function BillingPage() {
     isSameMonth(t.date.toDate(), new Date())
   );
 
-  const isBilled = (clientId: string) => {
-    return currentMonthTransactions.some(t => t.clientId === clientId && t.type === 'income');
+  const isBilled = (clientId: string, feeId?: string) => {
+    return currentMonthTransactions.some(t => 
+      t.clientId === clientId && 
+      (feeId && feeId !== 'legacy' ? t.feeId === feeId : (!t.feeId || t.feeId === 'legacy')) &&
+      t.type === 'income'
+    );
   };
 
-  const handleToggleBilling = async (client: Client) => {
-    if (isBilled(client.id!)) return;
+  const handleToggleBilling = async (client: Client, fee?: any) => {
+    if (isBilled(client.id!, fee?.id)) return;
     setSelectedClient(client);
+    setSelectedFee(fee);
     setIsEmitModalOpen(true);
   };
 
@@ -105,18 +110,40 @@ export default function BillingPage() {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Flat list of all fees for all filtered clients
+  const clientFeesList = filteredClients.flatMap(client => {
+    if (client.fees && client.fees.length > 0) {
+      return client.fees.map(fee => ({ client, fee }));
+    }
+    // Legacy support: treat legacy budget/currency as a single fee
+    return [{
+      client,
+      fee: {
+        id: 'legacy',
+        serviceName: client.billingType === 'monthly_fee' ? 'Abono Mensual' : 'Proyecto',
+        amount: client.budget || 0,
+        currency: client.currency || 'ARS',
+        billingType: client.billingType || 'monthly_fee',
+        defaultTargetAccount: client.defaultTargetAccount
+      }
+    }];
+  });
+
   const filteredPending = currentMonthPending.filter(t => {
     const client = clients.find(c => c.id === t.clientId);
-    return client?.name.toLowerCase().includes(search.toLowerCase());
+    return client?.name?.toLowerCase().includes(search.toLowerCase()) || false;
   });
 
   const filteredOverdue = overduePending.filter(t => {
     const client = clients.find(c => c.id === t.clientId);
-    return client?.name.toLowerCase().includes(search.toLowerCase());
+    return client?.name?.toLowerCase().includes(search.toLowerCase()) || false;
   });
 
-  const getClientOverdueCount = (clientId: string) => {
-    return overduePending.filter(t => t.clientId === clientId).length;
+  const getClientOverdueCount = (clientId: string, feeId?: string) => {
+    return overduePending.filter(t => 
+      t.clientId === clientId && 
+      (feeId && feeId !== 'legacy' ? t.feeId === feeId : (!t.feeId || t.feeId === 'legacy'))
+    ).length;
   };
 
   return (
@@ -176,7 +203,7 @@ export default function BillingPage() {
           <input 
             type="text" 
             placeholder={
-              activeTab === 'emit' ? "Buscar cliente en este ciclo..." : 
+              activeTab === 'emit' ? "Buscar cliente o servicio..." : 
               activeTab === 'collect' ? "Buscar cobranza del mes..." :
               "Buscar cobranzas vencidas..."
             }
@@ -203,12 +230,12 @@ export default function BillingPage() {
                   exit={{ opacity: 0, y: -20 }}
                   className="contents"
                 >
-                  {filteredClients.map((client) => {
-                    const billed = isBilled(client.id!);
-                    const isProcessing = processingId === client.id;
+                  {clientFeesList.map(({ client, fee }, idx) => {
+                    const billed = isBilled(client.id!, fee.id);
+                    const overdueCount = getClientOverdueCount(client.id!, fee.id);
                     
                     return (
-                      <Card key={client.id} className={cn(
+                      <Card key={`${client.id}-${fee.id || idx}`} className={cn(
                         "group border-none transition-all duration-300 overflow-hidden relative",
                         billed ? "bg-emerald-500/5 ring-1 ring-emerald-500/20" : "bg-card backdrop-blur-md ring-1 ring-border"
                       )}>
@@ -221,18 +248,20 @@ export default function BillingPage() {
                               <div onClick={() => handleEditClient(client)} className="cursor-pointer hover:opacity-80 overflow-hidden">
                                 <h3 className="font-bold text-sm truncate max-w-[140px] sm:max-w-none">{client.name}</h3>
                                 <div className="flex items-center space-x-2">
-                                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{client.billingType === 'monthly_fee' ? 'Abono Mensual' : 'Proyecto'}</p>
-                                  {getClientOverdueCount(client.id!) > 0 && (
+                                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest truncate max-w-[100px]">
+                                    {fee.serviceName}
+                                  </p>
+                                  {overdueCount > 0 && (
                                     <span className="text-[8px] font-black bg-rose-500/10 text-rose-500 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                                      Debe {getClientOverdueCount(client.id!)} {getClientOverdueCount(client.id!) === 1 ? 'mes' : 'meses'}
+                                      Debe {overdueCount} {overdueCount === 1 ? 'mes' : 'meses'}
                                     </span>
                                   )}
                                 </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className={cn("text-sm font-black", client.currency === 'USD' ? "text-cyan-400" : "text-foreground")}>
-                                {client.currency === 'USD' ? 'u$s' : '$'} {client.budget.toLocaleString()}
+                              <div className={cn("text-sm font-black", fee.currency === 'USD' ? "text-cyan-400" : "text-foreground")}>
+                                {fee.currency === 'USD' ? 'u$s' : '$'} {fee.amount.toLocaleString()}
                               </div>
                             </div>
                           </div>
@@ -253,19 +282,18 @@ export default function BillingPage() {
                             </div>
 
                             <button
-                              disabled={billed || isProcessing}
-                              onClick={() => handleToggleBilling(client)}
+                              disabled={billed}
+                              onClick={() => handleToggleBilling(client, fee)}
                               className={cn(
                                 "relative w-14 h-7 rounded-full transition-all duration-500 flex items-center px-1",
-                                billed ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-muted border border-border",
-                                isProcessing && "opacity-50"
+                                billed ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-muted border border-border"
                               )}
                             >
                               <motion.div 
                                 animate={{ x: billed ? 28 : 0 }}
                                 className={cn("h-5 w-5 rounded-full flex items-center justify-center shadow-lg", billed ? "bg-white text-emerald-500" : "bg-muted text-muted-foreground")}
                               >
-                                {isProcessing ? <RefreshCw className="h-3 w-3 animate-spin" /> : <div className="h-1.5 w-1.5 rounded-full bg-current" />}
+                                <div className="h-1.5 w-1.5 rounded-full bg-current" />
                               </motion.div>
                             </button>
                           </div>
@@ -295,9 +323,13 @@ export default function BillingPage() {
                               <div className="h-10 w-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center">
                                 <ReceiptText className="h-5 w-5" />
                               </div>
-                              <div onClick={() => client && handleEditClient(client)} className="cursor-pointer hover:opacity-80">
+                              <div onClick={() => client && handleEditClient(client)} className="cursor-pointer hover:opacity-80 overflow-hidden">
                                  <h3 className="font-bold text-sm truncate w-24 md:w-32">{client?.name || 'Cliente'}</h3>
-                                 <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Emitido: {format(t.date.toDate(), "dd MMM", { locale: es })}</p>
+                                 <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest truncate max-w-[150px]">
+                                   {t.feeId && client?.fees ? 
+                                     `${client.fees.find(f => f.id === t.feeId)?.serviceName || ''} • ` : ''}
+                                   Emitido: {format(t.date.toDate(), "dd MMM", { locale: es })}
+                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -350,9 +382,13 @@ export default function BillingPage() {
                               <div className="h-10 w-10 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center">
                                 <Clock className="h-5 w-5" />
                               </div>
-                              <div onClick={() => client && handleEditClient(client)} className="cursor-pointer hover:opacity-80">
+                              <div onClick={() => client && handleEditClient(client)} className="cursor-pointer hover:opacity-80 overflow-hidden">
                                  <h3 className="font-bold text-sm truncate w-24 md:w-32">{client?.name || 'Cliente'}</h3>
-                                 <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest">VENCIDO: {format(t.date.toDate(), "MMMM yyyy", { locale: es })}</p>
+                                 <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest truncate max-w-[150px]">
+                                   {t.feeId && client?.fees ? 
+                                     `${client.fees.find(f => f.id === t.feeId)?.serviceName || ''} • ` : ''}
+                                   VENCIDO: {format(t.date.toDate(), "MMMM yyyy", { locale: es })}
+                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -402,6 +438,7 @@ export default function BillingPage() {
         onClose={() => setIsEmitModalOpen(false)}
         onSuccess={fetchData}
         client={selectedClient}
+        fee={selectedFee}
       />
 
       <ConfirmPaymentModal 
