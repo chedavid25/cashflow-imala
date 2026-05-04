@@ -76,7 +76,7 @@ export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBil
 
     setLoading(true);
     try {
-      await transactionService.createTransaction({
+      const transactionData: any = {
         userId: user.uid,
         clientId: client.id,
         type: 'income',
@@ -88,9 +88,14 @@ export function EmitBillingModal({ isOpen, onClose, onSuccess, client }: EmitBil
         isRecurring: client.billingType === 'monthly_fee',
         paidBy: 'David',
         accountId: accountId,
-        exchangeRate: isCurrencyChange ? (parseFloat(exchangeRate) || 1) : 1,
-        exchangeDate: isCurrencyChange ? Timestamp.fromDate(new Date(exchangeDate)) : undefined
-      });
+      };
+
+      if (isCurrencyChange) {
+        transactionData.exchangeRate = parseFloat(exchangeRate) || 1;
+        transactionData.exchangeDate = Timestamp.fromDate(new Date(exchangeDate));
+      }
+
+      await transactionService.createTransaction(transactionData);
       
       onSuccess();
       onClose();
