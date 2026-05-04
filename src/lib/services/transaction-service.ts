@@ -73,19 +73,35 @@ export const transactionService = {
     const transactionRef = doc(db, "transactions", transactionId);
     
     await runTransaction(db, async (txn) => {
+      // 1. ALL READS FIRST
       const tSnap = await txn.get(transactionRef);
       if (!tSnap.exists()) throw new Error("Transaction does not exist");
-      
       const tData = tSnap.data() as Transaction;
-      if (tData.status === 'completed') throw new Error("Transaction is already completed");
 
       const accountRef = doc(db, "accounts", finalData.accountId);
       const aSnap = await txn.get(accountRef);
+
+      let clientSnap = null;
+      let clientRef = null;
+      if (tData.clientId) {
+        clientRef = doc(db, "clients", tData.clientId);
+        clientSnap = await txn.get(clientRef);
+      }
+
+      let assetSnap = null;
+      let assetRef = null;
+      if (tData.assetId && tData.type === 'investment') {
+        assetRef = doc(db, "assets", tData.assetId);
+        assetSnap = await txn.get(assetRef);
+      }
+
+      // 2. VALIDATIONS
+      if (tData.status === 'completed') throw new Error("Transaction is already completed");
       if (!aSnap.exists()) throw new Error("Account does not exist");
 
+      // 3. ALL WRITES
       // Update balance
       const amountModifier = tData.type === 'income' ? finalData.amount : -finalData.amount;
-      
       txn.update(accountRef, {
         balance: aSnap.data().balance + amountModifier
       });
@@ -102,52 +118,44 @@ export const transactionService = {
       });
 
       // CLEANUP: If it's a one-shot fee, remove it from the client
-      if (tData.clientId) {
-        const clientRef = doc(db, "clients", tData.clientId);
-        const cSnap = await txn.get(clientRef);
-        if (cSnap.exists()) {
-          const cData = cSnap.data();
-          
-          // Case 1: Fee is in the fees array
-          if (tData.feeId && cData.fees) {
-            const feeIndex = cData.fees.findIndex((f: any) => f.id === tData.feeId);
-            if (feeIndex !== -1 && cData.fees[feeIndex].billingType === 'one_shot') {
-              const updatedFees = [...cData.fees];
-              updatedFees.splice(feeIndex, 1);
-              txn.update(clientRef, { fees: updatedFees });
-            }
+      if (clientSnap && clientSnap.exists() && clientRef) {
+        const cData = clientSnap.data();
+        
+        // Case 1: Fee is in the fees array
+        if (tData.feeId && cData.fees) {
+          const feeIndex = cData.fees.findIndex((f: any) => f.id === tData.feeId);
+          if (feeIndex !== -1 && cData.fees[feeIndex].billingType === 'one_shot') {
+            const updatedFees = [...cData.fees];
+            updatedFees.splice(feeIndex, 1);
+            txn.update(clientRef, { fees: updatedFees });
           }
-          // Case 2: Legacy fee (no fees array, using budget/billingType fields)
-          else if (!tData.feeId && cData.billingType === 'one_shot') {
-            txn.update(clientRef, {
-              budget: 0,
-              billingType: null,
-              currency: null
-            });
-          }
-          // Case 3: Legacy fee identified as 'legacy'
-          else if (tData.feeId === 'legacy' && cData.billingType === 'one_shot') {
-            txn.update(clientRef, {
-              budget: 0,
-              billingType: null,
-              currency: null
-            });
-          }
+        }
+        // Case 2: Legacy fee (no fees array, using budget/billingType fields)
+        else if (!tData.feeId && cData.billingType === 'one_shot') {
+          txn.update(clientRef, {
+            budget: 0,
+            billingType: null,
+            currency: null
+          });
+        }
+        // Case 3: Legacy fee identified as 'legacy'
+        else if (tData.feeId === 'legacy' && cData.billingType === 'one_shot') {
+          txn.update(clientRef, {
+            budget: 0,
+            billingType: null,
+            currency: null
+          });
         }
       }
 
       // Update linked asset if it's an investment
-      if (tData.assetId && tData.type === 'investment') {
-        const assetRef = doc(db, "assets", tData.assetId);
-        const assetSnap = await txn.get(assetRef);
-        if (assetSnap.exists()) {
-          const assetData = assetSnap.data();
-          txn.update(assetRef, {
-            initialCapital: (assetData.initialCapital || 0) + finalData.amount,
-            currentValue: (assetData.currentValue || 0) + finalData.amount,
-            paidInstallments: (assetData.paidInstallments || 0) + 1
-          });
-        }
+      if (assetSnap && assetSnap.exists() && assetRef) {
+        const assetData = assetSnap.data();
+        txn.update(assetRef, {
+          initialCapital: (assetData.initialCapital || 0) + finalData.amount,
+          currentValue: (assetData.currentValue || 0) + finalData.amount,
+          paidInstallments: (assetData.paidInstallments || 0) + 1
+        });
       }
     });
   },

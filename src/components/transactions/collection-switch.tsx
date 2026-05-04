@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Check, X, RefreshCw, Landmark } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import { Timestamp } from "firebase/firestore";
 
 interface CollectionSwitchProps {
   transaction: Transaction;
@@ -24,7 +25,7 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
   const [amount, setAmount] = useState(transaction.amount);
   const [currency, setCurrency] = useState(transaction.currency);
   const [exchangeRate, setExchangeRate] = useState(1);
-  const [accountId, setAccountId] = useState(transaction.accountId);
+  const [accountId, setAccountId] = useState(transaction.accountId || "");
 
   useEffect(() => {
     if (isOpen && user) {
@@ -33,18 +34,26 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
   }, [isOpen, user]);
 
   const handleConfirm = async () => {
+    if (!transaction.id || !accountId) {
+      console.error("Faltan datos requeridos: id o cuenta");
+      return;
+    }
+
     setLoading(true);
     try {
-      await transactionService.confirmTransaction(transaction.id!, {
+      await transactionService.confirmTransaction(transaction.id, {
         amount,
         currency,
-        exchangeRate,
+        exchangeRate: exchangeRate || 1,
+        exchangeDate: Timestamp.now(),
         accountId,
       });
+      
       setIsOpen(false);
       if (onConfirm) onConfirm();
     } catch (error) {
       console.error("Error confirming collection:", error);
+      alert("Hubo un error al registrar el ingreso. Por favor, intenta de nuevo.");
     } finally {
       setLoading(false);
     }

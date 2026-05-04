@@ -87,27 +87,39 @@ export default function ReportsPage() {
   }, [user]);
 
   const getMonthlyData = () => {
-    const months = Array.from({ length: 6 }).map((_, i) => subMonths(new Date(), i)).reverse();
+    const months = Array.from({ length: 12 }).map((_, i) => subMonths(new Date(), i)).reverse();
     
     return months.map(month => {
       const monthTransactions = transactions.filter(t => 
         t.currency === currency && 
-        t.status === 'completed' &&
         isSameMonth(t.date.toDate(), month)
       );
 
-      const income = monthTransactions
-        .filter(t => t.type === 'income')
+      const incomeConfirmed = monthTransactions
+        .filter(t => t.type === 'income' && t.status === 'completed')
         .reduce((acc, curr) => acc + curr.amount, 0);
       
-      const expense = monthTransactions
-        .filter(t => t.type === 'expense')
+      const incomePending = monthTransactions
+        .filter(t => t.type === 'income' && t.status === 'pending')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+      
+      const expenseConfirmed = monthTransactions
+        .filter(t => t.type === 'expense' && t.status === 'completed')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+      
+      const expensePending = monthTransactions
+        .filter(t => t.type === 'expense' && t.status === 'pending')
         .reduce((acc, curr) => acc + curr.amount, 0);
 
       return {
         name: format(month, "MMM", { locale: es }),
-        ingresos: income,
-        egresos: expense,
+        ingresos_cobrados: incomeConfirmed,
+        ingresos_pendientes: incomePending,
+        egresos_pagados: expenseConfirmed,
+        egresos_pendientes: expensePending,
+        // Totals for the line chart
+        total_ingresos: incomeConfirmed + incomePending,
+        total_egresos: expenseConfirmed + expensePending
       };
     });
   };
@@ -355,7 +367,7 @@ export default function ReportsPage() {
               <CardHeader className="px-0 pb-8 flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
                   <CardTitle className="text-lg font-bold">Ingresos vs Egresos</CardTitle>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Últimos 6 meses</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Últimos 12 meses</p>
                 </div>
                 <BarChart3 className="h-5 w-5 text-primary" />
               </CardHeader>
@@ -386,8 +398,10 @@ export default function ReportsPage() {
                         fontWeight: 'bold'
                       }}
                     />
-                    <Bar dataKey="ingresos" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
-                    <Bar dataKey="egresos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey="ingresos_cobrados" stackId="income" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40} name="Ingresos Cobrados" />
+                    <Bar dataKey="ingresos_pendientes" stackId="income" fill="#10b981" fillOpacity={0.3} radius={[4, 4, 0, 0]} barSize={40} name="Ingresos Pendientes" />
+                    <Bar dataKey="egresos_pagados" stackId="expense" fill="#ef4444" radius={[0, 0, 0, 0]} barSize={40} name="Egresos Pagados" />
+                    <Bar dataKey="egresos_pendientes" stackId="expense" fill="#ef4444" fillOpacity={0.3} radius={[4, 4, 0, 0]} barSize={40} name="Egresos Pendientes" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -397,7 +411,7 @@ export default function ReportsPage() {
             <Card className="border border-border bg-card shadow-xl rounded-3xl overflow-hidden p-6 lg:col-span-2">
               <CardHeader className="px-0 pb-8 space-y-1">
                 <CardTitle className="text-lg font-bold">Tendencia de Flujo</CardTitle>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Evolución mensual</p>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Evolución en los últimos 12 meses</p>
               </CardHeader>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -424,17 +438,19 @@ export default function ReportsPage() {
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="ingresos" 
+                      dataKey="total_ingresos" 
                       stroke="#10b981" 
                       strokeWidth={4} 
+                      name="Total Ingresos"
                       dot={{ fill: '#10b981', r: 6, strokeWidth: 0 }}
                       activeDot={{ r: 8, stroke: 'white', strokeWidth: 2 }}
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="egresos" 
+                      dataKey="total_egresos" 
                       stroke="#ef4444" 
                       strokeWidth={4} 
+                      name="Total Egresos"
                       dot={{ fill: '#ef4444', r: 6, strokeWidth: 0 }}
                       activeDot={{ r: 8, stroke: 'white', strokeWidth: 2 }}
                     />
