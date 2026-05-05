@@ -73,7 +73,9 @@ export function PendingConfirmations() {
                   <div className="flex flex-col">
                     <p className="font-bold text-sm leading-tight">{clientName || t.category}</p>
                     {clientName && <p className="text-[10px] text-primary font-bold uppercase tracking-tight">{t.category}</p>}
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground flex items-center">
+                      <Clock className="h-2 w-2 mr-1" />
+                      {t.status === 'pending' && t.type === 'investment' ? 'Vencimiento: ' : 'Emitido: '}
                       {format(t.date.toDate(), "d 'de' MMMM", { locale: es })}
                     </p>
                   </div>

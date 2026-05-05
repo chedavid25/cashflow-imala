@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { assetService, Asset } from "@/lib/services/asset-service";
 import { accountService, Account } from "@/lib/services/account-service";
+import { transactionService } from "@/lib/services/transaction-service";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,10 @@ import { CreateAssetModal } from "@/components/investments/create-asset-modal";
 import { UpdateValueModal } from "@/components/investments/update-value-modal";
 import { LiquidateAssetModal } from "@/components/investments/liquidate-asset-modal";
 import { AddContributionModal } from "@/components/investments/add-contribution-modal";
+import { ConfirmPaymentModal } from "@/components/billing/confirm-payment-modal";
 import { cn } from "@/lib/utils";
 import { useInstallmentManager } from "@/hooks/use-installment-manager";
+import { Timestamp } from "firebase/firestore";
 
 export default function InvestmentsPage() {
   const { user } = useAuth();
@@ -26,7 +29,9 @@ export default function InvestmentsPage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isLiquidateModalOpen, setIsLiquidateModalOpen] = useState(false);
   const [isAddContributionModalOpen, setIsAddContributionModalOpen] = useState(false);
+  const [isConfirmPaymentModalOpen, setIsConfirmPaymentModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   useInstallmentManager(user?.uid, assets, () => fetchData());
 
@@ -78,6 +83,64 @@ export default function InvestmentsPage() {
   const handleAddContribution = (asset: Asset) => {
     setSelectedAsset(asset);
     setIsAddContributionModalOpen(true);
+  };
+
+  const handlePayInstallment = async (asset: Asset) => {
+    if (!user || !asset.id) return;
+    
+    try {
+      const allTransactions = await transactionService.getTransactions(user.uid);
+      const nextDate = asset.nextInstallmentDate.toDate();
+      
+      const alreadyExists = allTransactions.some(t => 
+        t.status === 'pending' && 
+        t.assetId === asset.id && 
+        t.date.toDate().getMonth() === nextDate.getMonth() &&
+        t.date.toDate().getFullYear() === nextDate.getFullYear()
+      );
+
+      if (alreadyExists) {
+        alert("Ya existe un pago pendiente para esta cuota en el Inicio.");
+        return;
+      }
+
+      const transId = await transactionService.createTransaction({
+        userId: user.uid,
+        accountId: "", 
+        assetId: asset.id,
+        type: 'investment',
+        category: `Cuota ${asset.paidInstallments! + 1} - ${asset.name}`,
+        amount: asset.installmentAmount!,
+        currency: asset.currency,
+        status: 'pending',
+        date: Timestamp.fromDate(nextDate),
+        isRecurring: false,
+        paidBy: 'David',
+      });
+
+      const nextMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, nextDate.getDate());
+      await assetService.updateAssetNextDate(asset.id!, Timestamp.fromDate(nextMonth));
+      
+      // Abrir modal de confirmación directamente
+      setSelectedTransaction({
+        id: transId,
+        userId: user.uid,
+        accountId: "",
+        assetId: asset.id,
+        type: 'investment',
+        category: `Cuota ${asset.paidInstallments! + 1} - ${asset.name}`,
+        amount: asset.installmentAmount!,
+        currency: asset.currency,
+        status: 'pending',
+        date: Timestamp.fromDate(nextDate),
+        isRecurring: false,
+        paidBy: 'David',
+      });
+      setIsConfirmPaymentModalOpen(true);
+      fetchData();
+    } catch (error) {
+      console.error("Error generating manual installment:", error);
+    }
   };
 
   const calcNetWorth = (currency: 'ARS' | 'USD') => {
@@ -181,6 +244,7 @@ export default function InvestmentsPage() {
                     onEdit={handleEdit}
                     onLiquidate={handleLiquidate}
                     onAddContribution={handleAddContribution}
+                    onPayInstallment={handlePayInstallment}
                   />
                 </motion.div>
               ))}
@@ -242,6 +306,16 @@ export default function InvestmentsPage() {
         }}
         onSuccess={fetchData}
         asset={selectedAsset}
+      />
+
+      <ConfirmPaymentModal 
+        isOpen={isConfirmPaymentModalOpen}
+        onClose={() => {
+          setIsConfirmPaymentModalOpen(false);
+          setSelectedTransaction(null);
+        }}
+        onSuccess={fetchData}
+        transaction={selectedTransaction}
       />
     </MainLayout>
   );

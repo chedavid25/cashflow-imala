@@ -15,9 +15,10 @@ interface InvestmentCardProps {
   onEdit: (asset: Asset) => void;
   onLiquidate: (asset: Asset) => void;
   onAddContribution: (asset: Asset) => void;
+  onPayInstallment?: (asset: Asset) => void;
 }
 
-export function InvestmentCard({ asset, onUpdateValue, onDelete, onEdit, onLiquidate, onAddContribution }: InvestmentCardProps) {
+export function InvestmentCard({ asset, onUpdateValue, onDelete, onEdit, onLiquidate, onAddContribution, onPayInstallment }: InvestmentCardProps) {
   const roi = ((asset.currentValue - asset.initialCapital) / asset.initialCapital) * 100;
   const isPositive = roi >= 0;
   const isLiquidated = asset.status === 'liquidated';
@@ -132,9 +133,19 @@ export function InvestmentCard({ asset, onUpdateValue, onDelete, onEdit, onLiqui
                 />
               </div>
               {asset.nextInstallmentDate && (
-                 <p className="text-[9px] font-medium text-muted-foreground italic">
-                  Próximo vencimiento: {new Date(asset.nextInstallmentDate.seconds * 1000).toLocaleDateString()}
-                 </p>
+                 <div className="flex justify-between items-center">
+                  <p className="text-[9px] font-medium text-muted-foreground italic">
+                    Próximo vencimiento: {new Date(asset.nextInstallmentDate.seconds * 1000).toLocaleDateString()}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest border-primary/30 text-primary hover:bg-primary/5"
+                    onClick={() => onPayInstallment?.(asset)}
+                  >
+                    Pagar Cuota
+                  </Button>
+                 </div>
               )}
             </div>
           )}

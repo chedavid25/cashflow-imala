@@ -87,13 +87,15 @@ export function ConfirmPaymentModal({ isOpen, onClose, onSuccess, transaction }:
 
   if (!transaction) return null;
 
+  const isInflow = transaction.type === 'income';
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Confirmar Cobro">
+    <Modal isOpen={isOpen} onClose={onClose} title={isInflow ? "Confirmar Cobro" : "Confirmar Pago"}>
       <div className="space-y-6 pb-4">
         {/* Resumen de lo Facturado */}
         <div className="bg-muted p-4 rounded-2xl border border-border space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Facturado</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{isInflow ? "Facturado" : "A Pagar"}</span>
             <span className="text-xs font-bold text-foreground/70">
               {transaction.currency} {transaction.amount.toLocaleString()}
             </span>
@@ -172,7 +174,9 @@ export function ConfirmPaymentModal({ isOpen, onClose, onSuccess, transaction }:
 
           {/* Monto Final y Cuenta */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">Monto Final Recibido</label>
+            <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">
+              {isInflow ? "Monto Final Recibido" : "Monto Final Pagado"}
+            </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
                 {currencyReceived === 'USD' ? 'u$s' : '$'}
@@ -187,7 +191,9 @@ export function ConfirmPaymentModal({ isOpen, onClose, onSuccess, transaction }:
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">Cuenta de Destino</label>
+            <label className="text-[10px] font-black text-muted-foreground uppercase ml-1">
+              {isInflow ? "Cuenta de Destino" : "Cuenta de Origen"}
+            </label>
             <div className="relative">
               <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <select
@@ -206,12 +212,15 @@ export function ConfirmPaymentModal({ isOpen, onClose, onSuccess, transaction }:
 
         <div className="pt-4 space-y-3">
           <Button 
-            disabled={loading || !accountId || (isCurrencyChange && !exchangeRate)}
+            className={cn(
+              "w-full h-16 rounded-2xl text-lg font-black shadow-xl transition-all flex items-center justify-center space-x-2",
+              isInflow ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/10" : "bg-rose-600 hover:bg-rose-500 shadow-rose-500/10"
+            )} 
             onClick={handleConfirm}
-            className="w-full h-16 rounded-2xl text-lg font-black bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-500/10 transition-all flex items-center justify-center space-x-2"
+            disabled={loading || !accountId || (isCurrencyChange && !exchangeRate)}
           >
             <CheckCircle2 className="h-6 w-6" />
-            <span>{loading ? "Registrando..." : "Registrar como Cobrado"}</span>
+            <span>{loading ? "Registrando..." : isInflow ? "Registrar como Cobrado" : "Registrar como Pagado"}</span>
           </Button>
           <p className="text-[10px] text-center text-muted-foreground font-bold uppercase tracking-widest">
             Esto actualizará el saldo de la cuenta automáticamente

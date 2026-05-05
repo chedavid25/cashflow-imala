@@ -63,10 +63,12 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
     return (
       <div className="flex items-center space-x-2 text-emerald-500 font-medium text-sm">
         <Check className="h-4 w-4" />
-        <span>Cobrado</span>
+        <span>{transaction.type === 'income' ? 'Cobrado' : 'Pagado'}</span>
       </div>
     );
   }
+
+  const isInflow = transaction.type === 'income';
 
   return (
     <>
@@ -74,10 +76,15 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="rounded-xl border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+        className={cn(
+          "rounded-xl",
+          isInflow 
+            ? "border-amber-500/50 text-amber-600 hover:bg-amber-500/10" 
+            : "border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
+        )}
       >
         <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-        Confirmar Cobro
+        {isInflow ? "Confirmar Cobro" : "Confirmar Pago"}
       </Button>
 
       {isOpen && (
@@ -85,7 +92,7 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
           <Card className="w-full max-w-md shadow-2xl border-none">
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Confirmar Cobranza</h3>
+                <h3 className="text-xl font-bold">{isInflow ? "Confirmar Cobranza" : "Confirmar Pago"}</h3>
                 <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                   <X className="h-5 w-5" />
                 </Button>
@@ -130,7 +137,9 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Cuenta de Destino</label>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    {isInflow ? "Cuenta de Destino" : "Cuenta de Origen"}
+                  </label>
                   <select
                     value={accountId}
                     onChange={(e) => setAccountId(e.target.value)}
@@ -148,11 +157,14 @@ export function CollectionSwitch({ transaction, onConfirm }: CollectionSwitchPro
 
               <div className="pt-4 flex flex-col space-y-3">
                 <Button 
-                  className="rounded-2xl h-14 text-lg" 
+                  className={cn(
+                    "rounded-2xl h-14 text-lg",
+                    !isInflow && "bg-rose-600 hover:bg-rose-500"
+                  )} 
                   onClick={handleConfirm}
                   disabled={loading || !accountId}
                 >
-                  {loading ? "Procesando..." : "Registrar Ingreso Real"}
+                  {loading ? "Procesando..." : isInflow ? "Registrar Ingreso Real" : "Registrar Pago Real"}
                 </Button>
                 <p className="text-[10px] text-center text-muted-foreground">
                   Al confirmar, el saldo de la cuenta se actualizará automáticamente.
